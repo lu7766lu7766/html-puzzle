@@ -1,0 +1,276 @@
+<template>
+  <div class="h-screen w-screen flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden font-sans transition-colors duration-200">
+    <!-- 頂部導航狀態列 -->
+    <TopNavBar
+      :current-level="currentLevel"
+      :total-stars="totalStars"
+      :active-mode="activeMode"
+      :is-muted="isMuted"
+      :is-dark="isDark"
+      @open-map="showMapModal = true"
+      @open-handbook="showHandbookModal = true"
+      @change-mode="onChangeMode"
+      @toggle-audio="toggleMute"
+      @toggle-theme="toggleTheme"
+    />
+
+    <!-- 關卡目標與任務指示條 -->
+    <MissionHeader
+      :level="currentLevel"
+      :checklist-status="checklistStatus"
+      :current-block-count="currentBlockCount"
+      @run-test="onRunTest"
+    />
+
+    <!-- 主體三欄佈局 (左側工具箱 + 中間畫布 + 右側即時預覽) -->
+    <div class="flex-1 flex overflow-hidden">
+      <!-- 左側：標籤積木工具箱 -->
+      <BlockPalette
+        :level="currentLevel"
+        @add-block="onAddBlockToRoot"
+      />
+
+      <!-- 中間：拖曳工作組裝畫布 -->
+      <PuzzleCanvas
+        :canvas-nodes="canvasNodes"
+        @add-root-block="onAddBlockToRoot"
+        @remove-node="onRemoveNode"
+        @remove-attr="onRemoveAttr"
+        @add-attr="onAddAttr"
+        @clear-canvas="onClearCanvas"
+        @drop-inside="onDropInside"
+        @reorder-root-nodes="onReorderRootNodes"
+      />
+
+      <!-- 右側：即時三合一預覽 (Live Browser / DOM Tree / Code) -->
+      <PreviewPanel
+        :html-code="currentHtmlCode"
+        :target-html="currentLevel.targetHtml"
+        :canvas-nodes="canvasNodes"
+      />
+    </div>
+
+    <!-- 模態框組件 -->
+    <!-- 1. 關卡探險地圖 -->
+    <LevelMapModal
+      v-if="showMapModal"
+      :current-level-id="currentLevelId"
+      :unlocked-levels="unlockedLevels"
+      :completed-levels="completedLevels"
+      @close="showMapModal = false"
+      @select-level="onSelectLevel"
+    />
+
+    <!-- 2. HTML 核心心智模型與避坑手冊 -->
+    <HandbookModal
+      v-if="showHandbookModal"
+      @close="showHandbookModal = false"
+    />
+
+    <!-- 3. 通關慶祝與人機驗收報告 -->
+    <LevelSuccessModal
+      v-if="showSuccessModal"
+      :level="currentLevel"
+      :test-report="lastTestReport"
+      :has-next-level="hasNextLevel"
+      @next-level="onNextLevel"
+      @close="showSuccessModal = false"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import TopNavBar from './components/navigation/TopNavBar.vue';
+import MissionHeader from './components/workspace/MissionHeader.vue';
+import BlockPalette from './components/workspace/BlockPalette.vue';
+import PuzzleCanvas from './components/workspace/PuzzleCanvas.vue';
+import PreviewPanel from './components/preview/PreviewPanel.vue';
+import LevelMapModal from './components/navigation/LevelMapModal.vue';
+import HandbookModal from './components/handbook/HandbookModal.vue';
+import LevelSuccessModal from './components/feedback/LevelSuccessModal.vue';
+
+import { useGameProgress } from './composables/useGameProgress';
+import { usePuzzleEngine } from './composables/usePuzzleEngine';
+import { useLevelValidator } from './composables/useLevelValidator';
+import { useAudioFeedback } from './composables/useAudioFeedback';
+import { useTheme } from './composables/useTheme';
+import { PUZZLE_LEVELS } from './data/levels';
+
+// 主題切換
+const { isDark, toggleTheme } = useTheme();
+
+// 狀態機與 Composables
+const {
+  currentLevelId,
+  currentLevel,
+  completedLevels,
+  unlockedLevels,
+  totalStars,
+  activeMode,
+  setMode,
+  setCurrentLevel,
+  completeCurrentLevel
+} = useGameProgress();
+
+const {
+  canvasNodes,
+  generateHtmlCode,
+  createNewNode,
+  addNode,
+  removeNode,
+  attachAttribute,
+  removeAttribute,
+  clearCanvas,
+  loadNodes,
+  countBlocks
+} = usePuzzleEngine();
+
+// 當前工作區畫布中已放置的積木數量
+const currentBlockCount = computed(() => {
+  return countBlocks(currentLevel.value?.id);
+});
+
+const { evaluateChecklist, runInteractiveTest } = useLevelValidator();
+const { isMuted, toggleMute, playSnap, playCheck, playSuccess, playClick } = useAudioFeedback();
+
+// 模態框顯示開關
+const showMapModal = ref(false);
+const showHandbookModal = ref(false);
+const showSuccessModal = ref(false);
+const lastTestReport = ref({ passed: false, stars: 3, logs: [] });
+
+// 當前生成之 HTML 原始碼
+const currentHtmlCode = computed(() => {
+  return generateHtmlCode();
+});
+
+// 即時目標打勾清單狀態
+const checklistStatus = ref({});
+let lastPassedIds = new Set();
+
+function updateChecklist() {
+  const status = evaluateChecklist(currentLevel.value, currentHtmlCode.value, canvasNodes.value);
+  checklistStatus.value = status;
+
+  // 若有新通過之檢查項，播放提示音
+  Object.entries(status).forEach(([id, passed]) => {
+    if (passed && !lastPassedIds.has(id)) {
+      playCheck();
+      lastPassedIds.add(id);
+    }
+  });
+}
+
+// 監聽畫布積木變動，即時更新目標檢驗
+watch([currentHtmlCode, currentLevel], () => {
+  updateChecklist();
+}, { deep: true });
+
+// 關卡切換處理：工作區一開始預設清空
+function initLevelWorkspace(level) {
+  lastPassedIds.clear();
+  clearCanvas();
+  updateChecklist();
+}
+
+watch(currentLevelId, (newId) => {
+  const lvl = PUZZLE_LEVELS.find(l => l.id === newId) || currentLevel.value;
+  initLevelWorkspace(lvl);
+});
+
+onMounted(() => {
+  initLevelWorkspace(currentLevel.value);
+});
+
+// 積木互動處理
+function onAddBlockToRoot(blockTemplate) {
+  playSnap();
+  // 屬性晶片特殊處理 (如第五關)
+  if (blockTemplate.type === 'attr') {
+    const targetNode = canvasNodes.value[0];
+    if (targetNode) {
+      attachAttribute(targetNode.id, blockTemplate.key, blockTemplate.value);
+      return;
+    }
+  }
+  const node = createNewNode(blockTemplate);
+  addNode(node);
+}
+
+function onDropInside({ targetContainerId, block }) {
+  playSnap();
+  if (block.type === 'attr') {
+    attachAttribute(targetContainerId, block.key, block.value);
+    return;
+  }
+  const node = createNewNode(block);
+  addNode(node, targetContainerId);
+}
+
+function onRemoveNode(nodeId) {
+  playClick();
+  removeNode(nodeId);
+}
+
+function onAddAttr({ nodeId, key, value }) {
+  playClick();
+  attachAttribute(nodeId, key, value);
+}
+
+function onRemoveAttr({ nodeId, key }) {
+  playClick();
+  removeAttribute(nodeId, key);
+}
+
+function onClearCanvas() {
+  playClick();
+  clearCanvas();
+}
+
+function onReorderRootNodes(newNodes) {
+  loadNodes(newNodes);
+}
+
+function onChangeMode(mode) {
+  playClick();
+  setMode(mode);
+}
+
+
+function onSelectLevel(lvlId) {
+  playClick();
+  setCurrentLevel(lvlId);
+}
+
+
+// 提交驗收測試
+async function onRunTest() {
+  playClick();
+  const report = await runInteractiveTest(currentLevel.value, currentHtmlCode.value, canvasNodes.value);
+  lastTestReport.value = report;
+
+  if (report.passed) {
+    playSuccess();
+    completeCurrentLevel(report.stars);
+    showSuccessModal.value = true;
+  } else {
+    const errorMsg = report.errorDetails.join('\n');
+    alert(`驗收未全數通過：\n${errorMsg}\n\n💡 提示：可查閱上方「避坑提示」！`);
+  }
+}
+
+const hasNextLevel = computed(() => {
+  const idx = PUZZLE_LEVELS.findIndex(l => l.id === currentLevelId.value);
+  return idx !== -1 && idx + 1 < PUZZLE_LEVELS.length;
+});
+
+function onNextLevel() {
+  playClick();
+  showSuccessModal.value = false;
+  const idx = PUZZLE_LEVELS.findIndex(l => l.id === currentLevelId.value);
+  if (idx !== -1 && idx + 1 < PUZZLE_LEVELS.length) {
+    setCurrentLevel(PUZZLE_LEVELS[idx + 1].id);
+  }
+}
+</script>
