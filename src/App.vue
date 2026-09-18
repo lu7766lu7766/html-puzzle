@@ -37,6 +37,7 @@
         @remove-node="onRemoveNode"
         @remove-attr="onRemoveAttr"
         @add-attr="onAddAttr"
+        @update-attr="onUpdateAttr"
         @clear-canvas="onClearCanvas"
         @drop-inside="onDropInside"
         @drop-relative="onDropRelative"
@@ -128,6 +129,7 @@ const {
   removeNode,
   attachAttribute,
   removeAttribute,
+  updateAttribute,
   clearCanvas,
   loadNodes,
   countBlocks
@@ -253,6 +255,11 @@ function onAddAttr({ nodeId, key, value }) {
 function onRemoveAttr({ nodeId, key }) {
   playClick();
   removeAttribute(nodeId, key);
+}
+
+function onUpdateAttr({ nodeId, oldKey, newKey, value }) {
+  playClick();
+  updateAttribute(nodeId, oldKey, newKey, value);
 }
 
 function onClearCanvas() {

@@ -277,6 +277,28 @@ export function usePuzzleEngine() {
     searchAndDelAttr(canvasNodes.value);
   }
 
+  // 更新節點特定屬性（支援鍵名修改與值修改）
+  function updateAttribute(nodeId, oldKey, newKey, value) {
+    function searchAndUpdateAttr(list) {
+      for (const item of list) {
+        if (item.id === nodeId) {
+          if (!item.attrs) item.attrs = {};
+          if (oldKey && oldKey !== newKey) {
+            delete item.attrs[oldKey];
+          }
+          item.attrs[newKey] = value;
+          return true;
+        }
+        if (item.children && searchAndUpdateAttr(item.children)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    searchAndUpdateAttr(canvasNodes.value);
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
   // 清空畫布
   function clearCanvas() {
     canvasNodes.value = [];
@@ -332,6 +354,7 @@ export function usePuzzleEngine() {
     removeNode,
     attachAttribute,
     removeAttribute,
+    updateAttribute,
     clearCanvas,
     loadNodes,
     countBlocks

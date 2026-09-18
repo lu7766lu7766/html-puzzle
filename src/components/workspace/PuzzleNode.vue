@@ -48,25 +48,74 @@
             &lt;{{ node.tag }}&gt;
           </span>
 
-          <!-- 屬性晶片展示與自訂 -->
+          <!-- 屬性晶片展示與自訂 (支援點擊行內修改) -->
           <div v-if="node.attrs && Object.keys(node.attrs).length > 0" class="flex items-center space-x-1.5 flex-wrap gap-1">
-            <span 
-              v-for="(val, key) in node.attrs" 
-              :key="key"
-              class="inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800/60 text-cyan-800 dark:text-cyan-300 font-mono text-xs font-bold"
-              @click.stop
-              @dragstart.stop
-              draggable="false"
-            >
-              <span>{{ key }}="<span class="text-amber-600 dark:text-amber-300">{{ val }}</span>"</span>
-              <button 
-                @click.stop="$emit('remove-attr', { nodeId: node.id, key })"
-                class="text-cyan-600 dark:text-cyan-400 hover:text-red-500 ml-1 font-bold cursor-pointer"
-                title="移除屬性"
+            <template v-for="(val, key) in node.attrs" :key="key">
+              <!-- 編輯模式 -->
+              <div 
+                v-if="editingAttrKey === key"
+                class="inline-flex items-center space-x-1 p-1 rounded-lg bg-amber-50 dark:bg-amber-950/90 border border-amber-400 dark:border-amber-600 shadow-sm"
+                @click.stop
+                @dragstart.stop
+                draggable="false"
               >
-                ×
-              </button>
-            </span>
+                <input 
+                  ref="editAttrKeyInputRef"
+                  v-model="editingKey"
+                  type="text"
+                  placeholder="名稱"
+                  class="w-20 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                  @keydown.enter.prevent="editAttrValInputRef?.focus()"
+                  @keydown.esc.prevent="cancelEditAttr"
+                  @click.stop
+                />
+                <span class="text-slate-500 font-bold">=</span>
+                <input 
+                  ref="editAttrValInputRef"
+                  v-model="editingVal"
+                  type="text"
+                  placeholder="值"
+                  class="w-28 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                  @keydown.enter.prevent="submitEditAttr"
+                  @keydown.esc.prevent="cancelEditAttr"
+                  @click.stop
+                />
+                <button 
+                  @click.stop="submitEditAttr"
+                  class="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
+                  title="儲存修改 (Enter)"
+                >
+                  ✓
+                </button>
+                <button 
+                  @click.stop="cancelEditAttr"
+                  class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
+                  title="取消 (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <!-- 正常顯示狀態（點擊進入編輯） -->
+              <span 
+                v-else
+                class="group inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/80 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-300 dark:border-cyan-800/60 hover:border-cyan-400 text-cyan-800 dark:text-cyan-300 font-mono text-xs font-bold cursor-pointer transition-all shadow-xs"
+                @click.stop="startEditAttr(key, val)"
+                @dragstart.stop
+                draggable="false"
+                title="點擊修改屬性"
+              >
+                <span>{{ key }}="<span class="text-amber-600 dark:text-amber-300">{{ val }}</span>"</span>
+                <span class="opacity-0 group-hover:opacity-100 text-[10px] text-cyan-500 dark:text-cyan-400 ml-0.5 transition-opacity" title="點擊編輯">✏️</span>
+                <button 
+                  @click.stop="$emit('remove-attr', { nodeId: node.id, key })"
+                  class="text-cyan-600 dark:text-cyan-400 hover:text-red-500 ml-1 font-bold cursor-pointer transition-colors"
+                  title="移除屬性"
+                >
+                  ×
+                </button>
+              </span>
+            </template>
           </div>
 
           <!-- 行內新增屬性區塊 (替代原生彈窗) -->
@@ -206,6 +255,7 @@
             @remove-node="$emit('remove-node', $event)"
             @remove-attr="$emit('remove-attr', $event)"
             @add-attr="$emit('add-attr', $event)"
+            @update-attr="$emit('update-attr', $event)"
             @move-node="$emit('move-node', $event)"
             @drop-inside="$emit('drop-inside', $event)"
             @drop-relative="$emit('drop-relative', $event)"
@@ -313,25 +363,74 @@
           空標籤 (自閉合)
         </span>
 
-        <!-- 屬性標籤 -->
+        <!-- 屬性標籤 (支援點擊行內修改) -->
         <div v-if="node.attrs && Object.keys(node.attrs).length > 0" class="flex items-center space-x-1.5 flex-wrap gap-1">
-          <span 
-            v-for="(val, key) in node.attrs" 
-            :key="key"
-            class="inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-300 dark:border-cyan-800/60 text-cyan-800 dark:text-cyan-300 font-mono text-xs font-bold"
-            @click.stop
-            @dragstart.stop
-            draggable="false"
-          >
-            <span>{{ key }}="<span class="text-amber-600 dark:text-amber-300">{{ val }}</span>"</span>
-            <button 
-              @click.stop="$emit('remove-attr', { nodeId: node.id, key })"
-              class="text-cyan-600 dark:text-cyan-400 hover:text-red-500 ml-1 font-bold cursor-pointer"
-              title="移除屬性"
+          <template v-for="(val, key) in node.attrs" :key="key">
+            <!-- 編輯模式 -->
+            <div 
+              v-if="editingAttrKey === key"
+              class="inline-flex items-center space-x-1 p-1 rounded-lg bg-amber-50 dark:bg-amber-950/90 border border-amber-400 dark:border-amber-600 shadow-sm"
+              @click.stop
+              @dragstart.stop
+              draggable="false"
             >
-              ×
-            </button>
-          </span>
+              <input 
+                ref="editAttrKeyInputRef"
+                v-model="editingKey"
+                type="text"
+                placeholder="名稱"
+                class="w-20 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                @keydown.enter.prevent="editAttrValInputRef?.focus()"
+                @keydown.esc.prevent="cancelEditAttr"
+                @click.stop
+              />
+              <span class="text-slate-500 font-bold">=</span>
+              <input 
+                ref="editAttrValInputRef"
+                v-model="editingVal"
+                type="text"
+                placeholder="值"
+                class="w-28 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                @keydown.enter.prevent="submitEditAttr"
+                @keydown.esc.prevent="cancelEditAttr"
+                @click.stop
+              />
+              <button 
+                @click.stop="submitEditAttr"
+                class="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
+                title="儲存修改 (Enter)"
+              >
+                ✓
+              </button>
+              <button 
+                @click.stop="cancelEditAttr"
+                class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
+                title="取消 (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- 正常顯示狀態（點擊進入編輯） -->
+            <span 
+              v-else
+              class="group inline-flex items-center space-x-1 px-2 py-0.5 rounded bg-cyan-50 dark:bg-cyan-950/80 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-300 dark:border-cyan-800/60 hover:border-cyan-400 text-cyan-800 dark:text-cyan-300 font-mono text-xs font-bold cursor-pointer transition-all shadow-xs"
+              @click.stop="startEditAttr(key, val)"
+              @dragstart.stop
+              draggable="false"
+              title="點擊修改屬性"
+            >
+              <span>{{ key }}="<span class="text-amber-600 dark:text-amber-300">{{ val }}</span>"</span>
+              <span class="opacity-0 group-hover:opacity-100 text-[10px] text-cyan-500 dark:text-cyan-400 ml-0.5 transition-opacity" title="點擊編輯">✏️</span>
+              <button 
+                @click.stop="$emit('remove-attr', { nodeId: node.id, key })"
+                class="text-cyan-600 dark:text-cyan-400 hover:text-red-500 ml-1 font-bold cursor-pointer transition-colors"
+                title="移除屬性"
+              >
+                ×
+              </button>
+            </span>
+          </template>
         </div>
 
         <!-- 行內屬性新增 -->
@@ -529,6 +628,7 @@ const emit = defineEmits([
   'remove-node',
   'remove-attr',
   'add-attr',
+  'update-attr',
   'move-node',
   'drop-inside',
   'drop-relative'
@@ -614,6 +714,52 @@ function cancelAddAttr() {
   isAddingAttr.value = false;
   newAttrKey.value = '';
   newAttrVal.value = '';
+}
+
+// 行內屬性修改狀態
+const editingAttrKey = ref(null);
+const editingKey = ref('');
+const editingVal = ref('');
+const editAttrKeyInputRef = ref(null);
+const editAttrValInputRef = ref(null);
+
+function startEditAttr(key, val) {
+  editingAttrKey.value = key;
+  editingKey.value = key;
+  editingVal.value = val !== undefined && val !== null ? String(val) : '';
+  nextTick(() => {
+    // 預設將焦點置於屬性值輸入框，並全選便於快速鍵入覆蓋
+    if (editAttrValInputRef.value) {
+      editAttrValInputRef.value.focus();
+      editAttrValInputRef.value.select();
+    }
+  });
+}
+
+function submitEditAttr() {
+  if (!editingAttrKey.value) return;
+  const oldKey = editingAttrKey.value;
+  const newK = editingKey.value.trim();
+  const newV = editingVal.value.trim();
+
+  if (!newK) {
+    // 若名稱被清空則刪除該屬性
+    emit('remove-attr', { nodeId: props.node.id, key: oldKey });
+  } else {
+    emit('update-attr', {
+      nodeId: props.node.id,
+      oldKey,
+      newKey: newK,
+      value: newV
+    });
+  }
+  cancelEditAttr();
+}
+
+function cancelEditAttr() {
+  editingAttrKey.value = null;
+  editingKey.value = '';
+  editingVal.value = '';
 }
 
 // 拖曳現有節點（完整包含其所有 children 與內容）

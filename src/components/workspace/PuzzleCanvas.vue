@@ -85,6 +85,7 @@
           @remove-node="$emit('remove-node', $event)"
           @remove-attr="$emit('remove-attr', $event)"
           @add-attr="$emit('add-attr', $event)"
+          @update-attr="$emit('update-attr', $event)"
           @move-node="onMoveNode"
           @drop-inside="$emit('drop-inside', $event)"
           @drop-relative="$emit('drop-relative', $event)"
@@ -135,6 +136,7 @@ const emit = defineEmits([
   'remove-node',
   'remove-attr',
   'add-attr',
+  'update-attr',
   'clear-canvas',
   'drop-inside',
   'drop-relative',
