@@ -6,7 +6,6 @@ const STORAGE_KEY = 'html_puzzle_game_progress_v1';
 const completedLevels = ref({});
 const unlockedLevels = ref(['stage-1']);
 const currentLevelId = ref('stage-1');
-const activeMode = ref('progressive'); // 'progressive' | 'strict' | 'container'
 
 // 初始化從 LocalStorage 讀取
 function loadProgress() {
@@ -16,7 +15,6 @@ function loadProgress() {
       const data = JSON.parse(saved);
       if (data.completedLevels) completedLevels.value = data.completedLevels;
       if (data.unlockedLevels) unlockedLevels.value = data.unlockedLevels;
-      if (data.activeMode) activeMode.value = data.activeMode;
     }
   } catch (e) {
     console.warn('無法載入存檔', e);
@@ -27,8 +25,7 @@ function saveProgress() {
   try {
     const payload = {
       completedLevels: completedLevels.value,
-      unlockedLevels: unlockedLevels.value,
-      activeMode: activeMode.value
+      unlockedLevels: unlockedLevels.value
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch (e) {
@@ -95,11 +92,6 @@ export function useGameProgress() {
     localStorage.removeItem(STORAGE_KEY);
   }
 
-  function setMode(mode) {
-    activeMode.value = mode;
-    saveProgress();
-  }
-
   return {
     currentLevelId,
     currentLevel,
@@ -107,8 +99,6 @@ export function useGameProgress() {
     unlockedLevels,
     totalStars,
     unlockedBadges,
-    activeMode,
-    setMode,
     setCurrentLevel,
     completeCurrentLevel,
     resetAllProgress

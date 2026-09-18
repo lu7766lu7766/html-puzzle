@@ -27,25 +27,14 @@
           {{ level.scenario }}
         </p>
 
-        <!-- 按鈕區：避坑提示 + 成果預覽圖 (依圖施做) -->
-        <div class="pt-1 flex items-center space-x-3 flex-wrap gap-y-1.5">
+        <!-- 按鈕區：避坑提示 -->
+        <div v-if="level.hint" class="pt-1 flex items-center space-x-3 flex-wrap gap-y-1.5">
           <button
-            v-if="level.hint"
             @click="showHint = !showHint"
-            class="inline-flex items-center space-x-1 text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold transition-colors"
+            class="inline-flex items-center space-x-1 text-xs text-amber-600 dark:text-amber-400 hover:underline font-bold transition-colors cursor-pointer"
           >
             <span>💡 {{ showHint ? "收起避坑提示" : "查看避坑提示" }}</span>
             <span class="text-xs">{{ showHint ? "▲" : "▼" }}</span>
-          </button>
-
-          <!-- 成果預覽圖按鈕 -->
-          <button
-            v-if="level.targetHtml"
-            @click="showTargetPreview = !showTargetPreview"
-            class="inline-flex items-center space-x-1.5 text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-300 dark:border-indigo-700 px-2.5 py-1 rounded-lg font-extrabold transition-all shadow-2xs cursor-pointer"
-          >
-            <span>🎯 {{ showTargetPreview ? "收起成果圖" : "成果預覽圖 (依圖施做)" }}</span>
-            <span class="text-xs">{{ showTargetPreview ? "▲" : "▼" }}</span>
           </button>
         </div>
 
@@ -55,46 +44,6 @@
           class="mt-1.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-xs sm:text-sm text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed font-medium"
         >
           {{ level.hint }}
-        </div>
-
-        <!-- 成果預覽圖展開卡片 (依圖施做) -->
-        <div
-          v-if="showTargetPreview && level.targetHtml"
-          class="mt-2.5 p-3 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-300 dark:border-indigo-800 shadow-md transition-all"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs sm:text-sm font-extrabold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                <span>🎯</span>
-                <span>本關最終成果畫面（依此對照組裝）：</span>
-              </span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <span v-if="level.targetDescription" class="text-xs text-slate-600 dark:text-slate-400 font-medium hidden sm:inline">
-                {{ level.targetDescription }}
-              </span>
-              <button
-                @click="showTargetModal = true"
-                class="px-2 py-0.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200 bg-white dark:bg-slate-900 rounded-md border border-indigo-200 dark:border-indigo-800 transition-colors flex items-center gap-1 shadow-2xs"
-              >
-                <span>🔍 放大檢視</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- 擬真微型瀏覽器視窗 -->
-          <div class="rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white shadow-inner max-w-2xl">
-            <div class="bg-slate-100 border-b border-slate-200 px-3 py-1.5 flex items-center space-x-1.5 select-none text-[11px] text-slate-500 font-mono">
-              <span class="w-2 h-2 rounded-full bg-rose-400"></span>
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span class="ml-2 font-bold text-indigo-600">🎯 http://localhost:8080/target-outcome.html</span>
-            </div>
-            <div
-              class="p-4 bg-white text-slate-800 overflow-x-auto min-h-17.5 flex items-center"
-              v-html="level.targetHtml"
-            ></div>
-          </div>
         </div>
       </div>
 
@@ -133,55 +82,6 @@
       </div>
     </div>
 
-    <!-- 成果預覽放大 Modal (Lightbox) -->
-    <div 
-      v-if="showTargetModal" 
-      class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
-      @click.self="showTargetModal = false"
-    >
-      <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col">
-        <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/70 flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <span class="text-xl">🎯</span>
-            <div>
-              <h3 class="text-base font-extrabold text-slate-900 dark:text-white">本關最終成果目標畫面</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">降低想像負擔，請依此畫面結構於工作區組裝</p>
-            </div>
-          </div>
-          <button 
-            @click="showTargetModal = false"
-            class="p-1.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg text-lg transition-colors"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div class="p-6 bg-slate-100 dark:bg-slate-950 flex flex-col items-center">
-          <div class="w-full rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-700 bg-white shadow-lg">
-            <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center space-x-2 text-xs font-mono text-slate-500">
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <span class="ml-2 font-bold text-indigo-600">🎯 http://localhost:8080/target-outcome.html</span>
-            </div>
-            <div class="p-6 bg-white text-slate-900 min-h-35 flex items-center justify-center text-base" v-html="level.targetHtml"></div>
-          </div>
-
-          <div v-if="level.targetDescription" class="mt-4 px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-medium text-center shadow-xs">
-            💡 特徵指引：{{ level.targetDescription }}
-          </div>
-        </div>
-
-        <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end">
-          <button 
-            @click="showTargetModal = false"
-            class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-md transition-colors"
-          >
-            知道了，開始依圖組裝 ➔
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -197,8 +97,6 @@ const props = defineProps({
 defineEmits(["run-test"])
 
 const showHint = ref(false)
-const showTargetPreview = ref(false)
-const showTargetModal = ref(false)
 
 // 該關卡實際需要的積木數量
 const requiredBlocks = computed(() => {

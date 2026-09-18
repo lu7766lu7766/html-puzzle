@@ -33,34 +33,6 @@
       </button>
     </div>
 
-    <!-- 中間：積木模式切換選單 (適應低解析度文字與對比) -->
-    <div class="hidden xl:flex items-center bg-slate-100 dark:bg-slate-950/80 p-1 rounded-xl border border-slate-300 dark:border-slate-800">
-      <button 
-        @click="$emit('change-mode', 'progressive')"
-        :class="activeMode === 'progressive' ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-        class="px-2.5 py-1 text-xs rounded-lg transition-all"
-        title="依關卡難度自動切換三大件與容器夾"
-      >
-        ✨ 漸進模式
-      </button>
-      <button 
-        @click="$emit('change-mode', 'strict')"
-        :class="activeMode === 'strict' ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-        class="px-2.5 py-1 text-xs rounded-lg transition-all"
-        title="起始、內容、結束標籤分開拼"
-      >
-        🧩 獨立三大件
-      </button>
-      <button 
-        @click="$emit('change-mode', 'container')"
-        :class="activeMode === 'container' ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-        class="px-2.5 py-1 text-xs rounded-lg transition-all"
-        title="成對凹字形容器防呆"
-      >
-        📦 容器插槽
-      </button>
-    </div>
-
     <!-- 右側功能捷徑 -->
     <div class="flex items-center space-x-1.5 sm:space-x-2">
       <!-- 亮暗色主題切換按鈕 -->
@@ -99,7 +71,6 @@
 const props = defineProps({
   currentLevel: { type: Object, required: true },
   totalStars: { type: Number, default: 0 },
-  activeMode: { type: String, default: 'progressive' },
   isMuted: { type: Boolean, default: false },
   isDark: { type: Boolean, default: true }
 });
@@ -107,7 +78,6 @@ const props = defineProps({
 defineEmits([
   'open-map',
   'open-handbook',
-  'change-mode',
   'toggle-audio',
   'toggle-theme'
 ]);

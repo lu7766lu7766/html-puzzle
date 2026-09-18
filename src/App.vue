@@ -4,12 +4,10 @@
     <TopNavBar
       :current-level="currentLevel"
       :total-stars="totalStars"
-      :active-mode="activeMode"
       :is-muted="isMuted"
       :is-dark="isDark"
       @open-map="showMapModal = true"
       @open-handbook="showHandbookModal = true"
-      @change-mode="onChangeMode"
       @toggle-audio="toggleMute"
       @toggle-theme="toggleTheme"
     />
@@ -79,6 +77,14 @@
       @next-level="onNextLevel"
       @close="showSuccessModal = false"
     />
+
+    <!-- 4. 未達標診斷分析彈窗 (安全穩定、條列清晰) -->
+    <LevelReviewModal
+      v-if="showReviewModal"
+      :level="currentLevel"
+      :test-report="lastTestReport"
+      @close="showReviewModal = false"
+    />
   </div>
 </template>
 
@@ -92,6 +98,7 @@ import PreviewPanel from './components/preview/PreviewPanel.vue';
 import LevelMapModal from './components/navigation/LevelMapModal.vue';
 import HandbookModal from './components/handbook/HandbookModal.vue';
 import LevelSuccessModal from './components/feedback/LevelSuccessModal.vue';
+import LevelReviewModal from './components/feedback/LevelReviewModal.vue';
 
 import { useGameProgress } from './composables/useGameProgress';
 import { usePuzzleEngine } from './composables/usePuzzleEngine';
@@ -110,8 +117,6 @@ const {
   completedLevels,
   unlockedLevels,
   totalStars,
-  activeMode,
-  setMode,
   setCurrentLevel,
   completeCurrentLevel
 } = useGameProgress();
@@ -147,6 +152,7 @@ const { isMuted, toggleMute, playSnap, playCheck, playSuccess, playClick } = use
 const showMapModal = ref(false);
 const showHandbookModal = ref(false);
 const showSuccessModal = ref(false);
+const showReviewModal = ref(false);
 const lastTestReport = ref({ passed: false, stars: 3, logs: [] });
 
 // 當前生成之 HTML 原始碼
@@ -271,14 +277,9 @@ function onReorderRootNodes(newNodes) {
   loadNodes(newNodes);
 }
 
-function onChangeMode(mode) {
-  playClick();
-  setMode(mode);
-}
-
-
 function onSelectLevel(lvlId) {
   playClick();
+  showReviewModal.value = false;
   setCurrentLevel(lvlId);
 }
 
@@ -294,8 +295,8 @@ async function onRunTest() {
     completeCurrentLevel(report.stars);
     showSuccessModal.value = true;
   } else {
-    const errorMsg = report.errorDetails.join('\n');
-    alert(`驗收未全數通過：\n${errorMsg}\n\n💡 提示：可查閱上方「避坑提示」！`);
+    // 驗收未通過：開啟自訂診斷分析彈窗（不再使用閃退的原生 alert）
+    showReviewModal.value = true;
   }
 }
 
