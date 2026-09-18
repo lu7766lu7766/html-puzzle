@@ -29,7 +29,17 @@
       <!-- 關卡專屬推薦積木 -->
       <div v-if="!showAllCategories">
         <div class="text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2 flex items-center justify-between">
-          <span>🎯 本關任務零件</span>
+          <div class="flex items-center space-x-1.5">
+            <span>🎯 本關任務零件</span>
+            <button 
+              @click="reshuffle" 
+              title="重新打亂零件順序" 
+              class="text-xs px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-300 transition-colors flex items-center gap-1 font-sans"
+            >
+              <span>🔀</span>
+              <span class="text-[10px]">打亂</span>
+            </button>
+          </div>
           <span class="text-xs text-slate-500 font-normal">點擊或拖曳</span>
         </div>
         <div class="space-y-2">
@@ -121,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { HTML_BLOCK_PALETTE } from '../../data/availableBlocks';
 import { usePuzzleEngine } from '../../composables/usePuzzleEngine';
 
@@ -136,6 +146,36 @@ const { setDraggingBlock, clearDraggingBlock } = usePuzzleEngine();
 const showAllCategories = ref(false);
 const activeCategory = ref('structure');
 const activeDraggingId = ref(null);
+const shuffledBlocks = ref([]);
+
+// Fisher-Yates 洗牌演算法，確保不與原始順序完全相同
+function shuffleArray(arr) {
+  if (!arr || arr.length <= 1) return [...(arr || [])];
+  const copy = JSON.parse(JSON.stringify(arr));
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  // 若隨機結果巧合與原始完全一樣，對調前兩項以確保打亂
+  const isIdentical = copy.every((b, idx) => b.id === arr[idx]?.id);
+  if (isIdentical && copy.length > 1) {
+    [copy[0], copy[1]] = [copy[1], copy[0]];
+  }
+  return copy;
+}
+
+function reshuffle() {
+  shuffledBlocks.value = shuffleArray(props.level.initialBlocks || []);
+}
+
+// 關卡切換或載入時自動打亂推薦零件
+watch(
+  () => props.level?.id,
+  () => {
+    reshuffle();
+  },
+  { immediate: true }
+);
 
 const categories = [
   { id: 'structure', name: '結構標籤' },
@@ -151,7 +191,7 @@ const currentCategoryName = computed(() => {
   return found ? found.name : '';
 });
 
-const levelBlocks = computed(() => props.level.initialBlocks || []);
+const levelBlocks = computed(() => shuffledBlocks.value);
 
 const currentCategoryItems = computed(() => {
   return HTML_BLOCK_PALETTE[activeCategory.value] || [];

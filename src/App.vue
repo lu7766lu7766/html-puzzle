@@ -39,6 +39,8 @@
         @add-attr="onAddAttr"
         @clear-canvas="onClearCanvas"
         @drop-inside="onDropInside"
+        @drop-relative="onDropRelative"
+        @move-node="onMoveNode"
         @reorder-root-nodes="onReorderRootNodes"
       />
 
@@ -118,6 +120,10 @@ const {
   generateHtmlCode,
   createNewNode,
   addNode,
+  insertNodeRelative,
+  insertNodeIntoContainer,
+  moveNodeRelative,
+  moveNodeIntoContainer,
   removeNode,
   attachAttribute,
   removeAttribute,
@@ -198,14 +204,34 @@ function onAddBlockToRoot(blockTemplate) {
   addNode(node);
 }
 
-function onDropInside({ targetContainerId, block }) {
+// 相對指定節點之前或之後放置
+function onDropRelative({ targetNodeId, position, block }) {
+  playSnap();
+  if (block.isExistingNode) {
+    moveNodeRelative(block.nodeId, targetNodeId, position);
+  } else {
+    const node = createNewNode(block);
+    insertNodeRelative(node, targetNodeId, position);
+  }
+}
+
+// 放入容器內部（最前 start 或最後 end）
+function onDropInside({ targetContainerId, position = 'end', block }) {
   playSnap();
   if (block.type === 'attr') {
     attachAttribute(targetContainerId, block.key, block.value);
     return;
   }
-  const node = createNewNode(block);
-  addNode(node, targetContainerId);
+  if (block.isExistingNode) {
+    moveNodeIntoContainer(block.nodeId, targetContainerId, position);
+  } else {
+    const node = createNewNode(block);
+    insertNodeIntoContainer(node, targetContainerId, position);
+  }
+}
+
+function onMoveNode() {
+  playClick();
 }
 
 function onRemoveNode(nodeId) {

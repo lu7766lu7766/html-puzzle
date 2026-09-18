@@ -88,28 +88,126 @@ export function usePuzzleEngine() {
     return copy;
   }
 
+  // 尋訪特定節點及其所在陣列與父節點
+  function findNodeAndParentList(nodeId, list = canvasNodes.value, parent = null) {
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === nodeId) {
+        return { node: list[i], list, index: i, parent };
+      }
+      if (list[i].children && list[i].children.length > 0) {
+        const found = findNodeAndParentList(nodeId, list[i].children, list[i]);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  // 判斷 searchId 是否為 ancestorNode 之子代（防止迴圈掛載）
+  function isDescendant(ancestorNode, searchId) {
+    if (!ancestorNode || !ancestorNode.children) return false;
+    for (const child of ancestorNode.children) {
+      if (child.id === searchId || isDescendant(child, searchId)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // 在指定目標節點之前 ('before') 或之後 ('after') 插入新節點
+  function insertNodeRelative(node, targetNodeId, position = 'before') {
+    const targetInfo = findNodeAndParentList(targetNodeId);
+    if (!targetInfo) {
+      canvasNodes.value.push(node);
+      return;
+    }
+    const insertIndex = position === 'before' ? targetInfo.index : targetInfo.index + 1;
+    targetInfo.list.splice(insertIndex, 0, node);
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
+  // 在指定容器內部的最前 ('start')、最後 ('end') 或特定索引插入新節點
+  function insertNodeIntoContainer(node, targetContainerId, position = 'end') {
+    const containerInfo = findNodeAndParentList(targetContainerId);
+    if (!containerInfo || containerInfo.node.type !== 'container') {
+      canvasNodes.value.push(node);
+      return;
+    }
+    const container = containerInfo.node;
+    if (!container.children) container.children = [];
+
+    if (position === 'start') {
+      container.children.unshift(node);
+    } else if (typeof position === 'number') {
+      container.children.splice(position, 0, node);
+    } else {
+      container.children.push(node);
+    }
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
+  // 移動現有節點至目標節點之前或之後
+  function moveNodeRelative(nodeId, targetNodeId, position = 'before') {
+    if (nodeId === targetNodeId) return;
+    const sourceInfo = findNodeAndParentList(nodeId);
+    if (!sourceInfo) return;
+    if (isDescendant(sourceInfo.node, targetNodeId)) return;
+
+    const [extracted] = sourceInfo.list.splice(sourceInfo.index, 1);
+    const targetInfo = findNodeAndParentList(targetNodeId);
+    if (!targetInfo) {
+      canvasNodes.value.push(extracted);
+      return;
+    }
+    const insertIndex = position === 'before' ? targetInfo.index : targetInfo.index + 1;
+    targetInfo.list.splice(insertIndex, 0, extracted);
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
+  // 移動現有節點至指定容器內部
+  function moveNodeIntoContainer(nodeId, targetContainerId, position = 'end') {
+    if (nodeId === targetContainerId) return;
+    const sourceInfo = findNodeAndParentList(nodeId);
+    if (!sourceInfo) return;
+    if (isDescendant(sourceInfo.node, targetContainerId)) return;
+
+    const [extracted] = sourceInfo.list.splice(sourceInfo.index, 1);
+    const containerInfo = findNodeAndParentList(targetContainerId);
+    if (!containerInfo || containerInfo.node.type !== 'container') {
+      canvasNodes.value.push(extracted);
+      return;
+    }
+    const container = containerInfo.node;
+    if (!container.children) container.children = [];
+
+    if (position === 'start') {
+      container.children.unshift(extracted);
+    } else if (typeof position === 'number') {
+      container.children.splice(position, 0, extracted);
+    } else {
+      container.children.push(extracted);
+    }
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
+  // 移動節點上移 (-1) 或下移 (+1)，支援任意巢狀深度的兄弟節點間調序
+  function moveNode(nodeId, dir) {
+    const info = findNodeAndParentList(nodeId);
+    if (!info) return;
+    const targetIdx = info.index + dir;
+    if (targetIdx >= 0 && targetIdx < info.list.length) {
+      const [moved] = info.list.splice(info.index, 1);
+      info.list.splice(targetIdx, 0, moved);
+      canvasNodes.value = [...canvasNodes.value];
+    }
+  }
+
   // 新增節點到最外層或特定容器內
   function addNode(node, targetContainerId = null) {
     if (!targetContainerId) {
       canvasNodes.value.push(node);
       return;
     }
-
-    function searchAndInsert(list) {
-      for (const item of list) {
-        if (item.id === targetContainerId && item.type === 'container') {
-          if (!item.children) item.children = [];
-          item.children.push(node);
-          return true;
-        }
-        if (item.children && searchAndInsert(item.children)) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    searchAndInsert(canvasNodes.value);
+    insertNodeIntoContainer(node, targetContainerId, 'end');
   }
 
   // 刪除節點
@@ -128,6 +226,7 @@ export function usePuzzleEngine() {
       return false;
     }
     searchAndRemove(canvasNodes.value);
+    canvasNodes.value = [...canvasNodes.value];
   }
 
   // 為節點掛載屬性晶片
@@ -210,6 +309,12 @@ export function usePuzzleEngine() {
     generateHtmlCode,
     createNewNode,
     addNode,
+    insertNodeRelative,
+    insertNodeIntoContainer,
+    moveNodeRelative,
+    moveNodeIntoContainer,
+    moveNode,
+    findNodeAndParentList,
     removeNode,
     attachAttribute,
     removeAttribute,

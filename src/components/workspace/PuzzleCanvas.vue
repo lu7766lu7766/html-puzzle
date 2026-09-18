@@ -85,8 +85,9 @@
           @remove-node="$emit('remove-node', $event)"
           @remove-attr="$emit('remove-attr', $event)"
           @add-attr="$emit('add-attr', $event)"
-          @move-node="onMoveRootNode"
+          @move-node="onMoveNode"
           @drop-inside="$emit('drop-inside', $event)"
+          @drop-relative="$emit('drop-relative', $event)"
         />
 
         <!-- 拖曳中的半透明預覽積木 (Ghost Preview) -->
@@ -110,6 +111,8 @@
         <!-- 底部快速落點 -->
         <div 
           class="py-3 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-xl text-center text-xs sm:text-sm font-semibold text-slate-500 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-slate-900/30 transition-all cursor-pointer"
+          @dragover.prevent.stop="isDragOver = true"
+          @drop.stop="onDropOnRoot"
         >
           ⬇ 拖曳或加入更多標籤至最外層
         </div>
@@ -134,10 +137,12 @@ const emit = defineEmits([
   'add-attr',
   'clear-canvas',
   'drop-inside',
+  'drop-relative',
+  'move-node',
   'reorder-root-nodes'
 ]);
 
-const { draggingBlock, clearDraggingBlock } = usePuzzleEngine();
+const { draggingBlock, clearDraggingBlock, moveNode } = usePuzzleEngine();
 const isDragOver = ref(false);
 
 function onDragOver() {
@@ -161,15 +166,8 @@ function onDropOnRoot(e) {
   } catch (err) {}
 }
 
-function onMoveRootNode({ nodeId, dir }) {
-  const list = [...props.canvasNodes];
-  const idx = list.findIndex(n => n.id === nodeId);
-  if (idx === -1) return;
-  const targetIdx = idx + dir;
-  if (targetIdx >= 0 && targetIdx < list.length) {
-    const [moved] = list.splice(idx, 1);
-    list.splice(targetIdx, 0, moved);
-    emit('reorder-root-nodes', list);
-  }
+function onMoveNode({ nodeId, dir }) {
+  moveNode(nodeId, dir);
+  emit('move-node', { nodeId, dir });
 }
 </script>
