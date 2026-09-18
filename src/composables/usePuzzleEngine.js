@@ -189,6 +189,19 @@ export function usePuzzleEngine() {
     canvasNodes.value = [...canvasNodes.value];
   }
 
+  // 移動現有節點至最外層 (Root)
+  function moveNodeToRoot(nodeId, position = 'end') {
+    const sourceInfo = findNodeAndParentList(nodeId);
+    if (!sourceInfo) return;
+    const [extracted] = sourceInfo.list.splice(sourceInfo.index, 1);
+    if (position === 'start') {
+      canvasNodes.value.unshift(extracted);
+    } else {
+      canvasNodes.value.push(extracted);
+    }
+    canvasNodes.value = [...canvasNodes.value];
+  }
+
   // 移動節點上移 (-1) 或下移 (+1)，支援任意巢狀深度的兄弟節點間調序
   function moveNode(nodeId, dir) {
     const info = findNodeAndParentList(nodeId);
@@ -313,6 +326,7 @@ export function usePuzzleEngine() {
     insertNodeIntoContainer,
     moveNodeRelative,
     moveNodeIntoContainer,
+    moveNodeToRoot,
     moveNode,
     findNodeAndParentList,
     removeNode,

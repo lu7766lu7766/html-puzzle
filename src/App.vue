@@ -124,6 +124,7 @@ const {
   insertNodeIntoContainer,
   moveNodeRelative,
   moveNodeIntoContainer,
+  moveNodeToRoot,
   removeNode,
   attachAttribute,
   removeAttribute,
@@ -192,6 +193,11 @@ onMounted(() => {
 // 積木互動處理
 function onAddBlockToRoot(blockTemplate) {
   playSnap();
+  // 若為既有積木，移至最外層（連同其所有子節點與內容）
+  if (blockTemplate.isExistingNode) {
+    moveNodeToRoot(blockTemplate.nodeId);
+    return;
+  }
   // 屬性晶片特殊處理 (如第五關)
   if (blockTemplate.type === 'attr') {
     const targetNode = canvasNodes.value[0];
