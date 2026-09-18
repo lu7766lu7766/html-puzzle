@@ -51,49 +51,91 @@
           <!-- 屬性晶片展示與自訂 (支援點擊行內修改) -->
           <div v-if="node.attrs && Object.keys(node.attrs).length > 0" class="flex items-center space-x-1.5 flex-wrap gap-1">
             <template v-for="(val, key) in node.attrs" :key="key">
-              <!-- 編輯模式 -->
+              <!-- 編輯模式 (支援下拉選單與自訂輸入) -->
               <div 
                 v-if="editingAttrKey === key"
-                class="inline-flex items-center space-x-1 p-1 rounded-lg bg-amber-50 dark:bg-amber-950/90 border border-amber-400 dark:border-amber-600 shadow-sm"
+                class="flex flex-col gap-1.5 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/95 border border-amber-400 dark:border-amber-600 shadow-md my-1 text-xs font-mono"
                 @click.stop
                 @dragstart.stop
                 draggable="false"
               >
-                <input 
-                  ref="editAttrKeyInputRef"
-                  v-model="editingKey"
-                  type="text"
-                  placeholder="名稱"
-                  class="w-20 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
-                  @keydown.enter.prevent="editAttrValInputRef?.focus()"
-                  @keydown.esc.prevent="cancelEditAttr"
-                  @click.stop
-                />
-                <span class="text-slate-500 font-bold">=</span>
-                <input 
-                  ref="editAttrValInputRef"
-                  v-model="editingVal"
-                  type="text"
-                  placeholder="值"
-                  class="w-28 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
-                  @keydown.enter.prevent="submitEditAttr"
-                  @keydown.esc.prevent="cancelEditAttr"
-                  @click.stop
-                />
-                <button 
-                  @click.stop="submitEditAttr"
-                  class="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-                  title="儲存修改 (Enter)"
-                >
-                  ✓
-                </button>
-                <button 
-                  @click.stop="cancelEditAttr"
-                  class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
-                  title="取消 (Esc)"
-                >
-                  ✕
-                </button>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <!-- 下拉更換屬性名稱 -->
+                  <select 
+                    @change="onSelectEditAttrPreset" 
+                    class="h-7 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono text-amber-900 dark:text-amber-200 font-bold focus:outline-none focus:border-amber-500 cursor-pointer shadow-xs max-w-44"
+                    title="下拉更換常用屬性"
+                  >
+                    <option value="" disabled selected>▾ 下拉更換屬性...</option>
+                    <optgroup v-if="tagSpecificAttrs.length > 0" :label="`✨ <${node.tag}> 專屬屬性`">
+                      <option v-for="a in tagSpecificAttrs" :key="'ed-spec-' + a.key" :value="a.key">
+                        {{ a.key }} — {{ a.desc }}
+                      </option>
+                    </optgroup>
+                    <optgroup label="🌐 通用共同屬性 (id/class/style...)">
+                      <option v-for="a in globalAttrs" :key="'ed-glob-' + a.key" :value="a.key">
+                        {{ a.key }} — {{ a.desc }}
+                      </option>
+                    </optgroup>
+                  </select>
+
+                  <span class="text-slate-400 text-[11px] font-sans">或</span>
+
+                  <!-- 名稱輸入框 (支援自由鍵入與自動補齊) -->
+                  <div class="relative">
+                    <input 
+                      ref="editAttrKeyInputRef"
+                      v-model="editingKey"
+                      :list="`datalist-edit-key-${node.id}`"
+                      type="text"
+                      placeholder="名稱"
+                      class="h-7 w-28 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                      @keydown.enter.prevent="editAttrValInputRef?.focus()"
+                      @keydown.esc.prevent="cancelEditAttr"
+                      @click.stop
+                    />
+                    <datalist :id="`datalist-edit-key-${node.id}`">
+                      <option v-for="a in allSuggestedAttrs" :key="a.key" :value="a.key">
+                        {{ a.desc }}
+                      </option>
+                    </datalist>
+                  </div>
+
+                  <span class="text-slate-500 font-extrabold">=</span>
+
+                  <!-- 數值輸入框 (支援枚舉值 datalist) -->
+                  <div class="relative">
+                    <input 
+                      ref="editAttrValInputRef"
+                      v-model="editingVal"
+                      :list="`datalist-edit-val-${node.id}`"
+                      type="text"
+                      placeholder="數值"
+                      class="h-7 w-36 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                      @keydown.enter.prevent="submitEditAttr"
+                      @keydown.esc.prevent="cancelEditAttr"
+                      @click.stop
+                    />
+                    <datalist :id="`datalist-edit-val-${node.id}`">
+                      <option v-for="val in editAttrSuggestedValues" :key="val" :value="val" />
+                    </datalist>
+                  </div>
+
+                  <button 
+                    @click.stop="submitEditAttr"
+                    class="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                    title="儲存修改 (Enter)"
+                  >
+                    <span>✓ 儲存</span>
+                  </button>
+                  <button 
+                    @click.stop="cancelEditAttr"
+                    class="h-7 px-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg cursor-pointer"
+                    title="取消 (Esc)"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
               <!-- 正常顯示狀態（點擊進入編輯） -->
@@ -118,41 +160,117 @@
             </template>
           </div>
 
-          <!-- 行內新增屬性區塊 (替代原生彈窗) -->
-          <div v-if="isAddingAttr" class="inline-flex items-center space-x-1 p-1 rounded-lg bg-cyan-100/90 dark:bg-cyan-950/90 border border-cyan-400 dark:border-cyan-700 shadow-sm" @click.stop @dragstart.stop draggable="false">
-            <input 
-              ref="attrKeyInputRef"
-              v-model="newAttrKey"
-              type="text"
-              placeholder="名稱 (如 class)"
-              class="w-24 px-2 py-0.5 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
-              @keydown.enter.prevent="attrValInputRef?.focus()"
-              @keydown.esc.prevent="cancelAddAttr"
-              @click.stop
-            />
-            <span class="text-slate-500 font-bold">=</span>
-            <input 
-              ref="attrValInputRef"
-              v-model="newAttrVal"
-              type="text"
-              placeholder="值 (如 btn)"
-              class="w-24 px-2 py-0.5 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
-              @keydown.enter.prevent="submitAddAttr"
-              @keydown.esc.prevent="cancelAddAttr"
-              @click.stop
-            />
-            <button 
-              @click.stop="submitAddAttr"
-              class="px-2 py-0.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-            >
-              ✓
-            </button>
-            <button 
-              @click.stop="cancelAddAttr"
-              class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
-            >
-              ✕
-            </button>
+          <!-- 行內新增屬性區塊 (支援下拉選單、自由鍵入與快捷標籤) -->
+          <div 
+            v-if="isAddingAttr" 
+            class="flex flex-col gap-1.5 p-2 rounded-xl bg-cyan-50/95 dark:bg-cyan-950/95 border border-cyan-400 dark:border-cyan-700 shadow-md my-1.5 text-xs font-mono" 
+            @click.stop 
+            @dragstart.stop 
+            draggable="false"
+          >
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <!-- 下拉選擇選單 -->
+              <select 
+                @change="onSelectAddAttrPreset" 
+                class="h-7 px-2 bg-white dark:bg-slate-900 border border-cyan-400 dark:border-cyan-700 rounded-lg text-xs font-mono text-cyan-900 dark:text-cyan-200 font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer shadow-xs max-w-44"
+                title="下拉挑選常用屬性"
+              >
+                <option value="" disabled selected>▾ 下拉挑選屬性...</option>
+                <optgroup v-if="tagSpecificAttrs.length > 0" :label="`✨ <${node.tag}> 專屬屬性`">
+                  <option v-for="a in tagSpecificAttrs" :key="'add-spec-' + a.key" :value="a.key">
+                    {{ a.key }} — {{ a.desc }}
+                  </option>
+                </optgroup>
+                <optgroup label="🌐 通用共同屬性 (id/class/style...)">
+                  <option v-for="a in globalAttrs" :key="'add-glob-' + a.key" :value="a.key">
+                    {{ a.key }} — {{ a.desc }}
+                  </option>
+                </optgroup>
+              </select>
+
+              <span class="text-slate-400 text-[11px] font-sans">或</span>
+
+              <!-- 自由鍵入輸入框 + datalist -->
+              <div class="relative">
+                <input 
+                  ref="attrKeyInputRef"
+                  v-model="newAttrKey"
+                  :list="`datalist-add-key-${node.id}`"
+                  type="text"
+                  placeholder="自行輸入名稱"
+                  class="h-7 w-32 px-2 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-lg text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
+                  @keydown.enter.prevent="attrValInputRef?.focus()"
+                  @keydown.esc.prevent="cancelAddAttr"
+                  @click.stop
+                />
+                <datalist :id="`datalist-add-key-${node.id}`">
+                  <option v-for="a in allSuggestedAttrs" :key="a.key" :value="a.key">
+                    {{ a.desc }}
+                  </option>
+                </datalist>
+              </div>
+
+              <span class="text-slate-500 font-extrabold">=</span>
+
+              <!-- 屬性數值輸入框 + 候選值 datalist -->
+              <div class="relative">
+                <input 
+                  ref="attrValInputRef"
+                  v-model="newAttrVal"
+                  :list="`datalist-add-val-${node.id}`"
+                  type="text"
+                  placeholder="填寫數值 (如 btn)"
+                  class="h-7 w-36 px-2 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-lg text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
+                  @keydown.enter.prevent="submitAddAttr"
+                  @keydown.esc.prevent="cancelAddAttr"
+                  @click.stop
+                />
+                <datalist :id="`datalist-add-val-${node.id}`">
+                  <option v-for="val in newAttrSuggestedValues" :key="val" :value="val" />
+                </datalist>
+              </div>
+
+              <!-- 確認與取消按鈕 -->
+              <button 
+                @click.stop="submitAddAttr"
+                class="h-7 px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                title="確認加入 (Enter)"
+              >
+                <span>✓ 加入</span>
+              </button>
+              <button 
+                @click.stop="cancelAddAttr"
+                class="h-7 px-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg cursor-pointer transition-colors"
+                title="取消 (Esc)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <!-- 常用快捷標籤膠囊列 (Quick Chips) -->
+            <div class="flex items-center gap-1 flex-wrap text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-cyan-200/60 dark:border-cyan-900/60">
+              <span class="font-sans font-bold text-cyan-800 dark:text-cyan-300">常用點選:</span>
+              <template v-if="tagSpecificAttrs.length > 0">
+                <button
+                  v-for="chip in tagSpecificAttrs"
+                  :key="'q-spec-' + chip.key"
+                  @click.stop="applyQuickChip(chip.key, 'add')"
+                  class="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/80 hover:bg-cyan-200 dark:hover:bg-cyan-800 border border-cyan-300 dark:border-cyan-700 text-cyan-900 dark:text-cyan-200 font-mono font-bold cursor-pointer transition-colors"
+                  :title="chip.desc"
+                >
+                  ✨ {{ chip.key }}
+                </button>
+              </template>
+              <button
+                v-for="chip in globalAttrs.slice(0, 4)"
+                :key="'q-glob-' + chip.key"
+                @click.stop="applyQuickChip(chip.key, 'add')"
+                class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono cursor-pointer transition-colors"
+                :title="chip.desc"
+              >
+                {{ chip.key }}
+              </button>
+            </div>
           </div>
 
           <!-- 快速增加屬性按鈕 -->
@@ -366,49 +484,91 @@
         <!-- 屬性標籤 (支援點擊行內修改) -->
         <div v-if="node.attrs && Object.keys(node.attrs).length > 0" class="flex items-center space-x-1.5 flex-wrap gap-1">
           <template v-for="(val, key) in node.attrs" :key="key">
-            <!-- 編輯模式 -->
+            <!-- 編輯模式 (支援下拉選單與自訂輸入) -->
             <div 
               v-if="editingAttrKey === key"
-              class="inline-flex items-center space-x-1 p-1 rounded-lg bg-amber-50 dark:bg-amber-950/90 border border-amber-400 dark:border-amber-600 shadow-sm"
+              class="flex flex-col gap-1.5 p-2 rounded-xl bg-amber-50 dark:bg-amber-950/95 border border-amber-400 dark:border-amber-600 shadow-md my-1 text-xs font-mono"
               @click.stop
               @dragstart.stop
               draggable="false"
             >
-              <input 
-                ref="editAttrKeyInputRef"
-                v-model="editingKey"
-                type="text"
-                placeholder="名稱"
-                class="w-20 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
-                @keydown.enter.prevent="editAttrValInputRef?.focus()"
-                @keydown.esc.prevent="cancelEditAttr"
-                @click.stop
-              />
-              <span class="text-slate-500 font-bold">=</span>
-              <input 
-                ref="editAttrValInputRef"
-                v-model="editingVal"
-                type="text"
-                placeholder="值"
-                class="w-28 px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
-                @keydown.enter.prevent="submitEditAttr"
-                @keydown.esc.prevent="cancelEditAttr"
-                @click.stop
-              />
-              <button 
-                @click.stop="submitEditAttr"
-                class="px-1.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-                title="儲存修改 (Enter)"
-              >
-                ✓
-              </button>
-              <button 
-                @click.stop="cancelEditAttr"
-                class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
-                title="取消 (Esc)"
-              >
-                ✕
-              </button>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <!-- 下拉更換屬性名稱 -->
+                <select 
+                  @change="onSelectEditAttrPreset" 
+                  class="h-7 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono text-amber-900 dark:text-amber-200 font-bold focus:outline-none focus:border-amber-500 cursor-pointer shadow-xs max-w-44"
+                  title="下拉更換常用屬性"
+                >
+                  <option value="" disabled selected>▾ 下拉更換屬性...</option>
+                  <optgroup v-if="tagSpecificAttrs.length > 0" :label="`✨ <${node.tag}> 專屬屬性`">
+                    <option v-for="a in tagSpecificAttrs" :key="'sc-ed-spec-' + a.key" :value="a.key">
+                      {{ a.key }} — {{ a.desc }}
+                    </option>
+                  </optgroup>
+                  <optgroup label="🌐 通用共同屬性 (id/class/style...)">
+                    <option v-for="a in globalAttrs" :key="'sc-ed-glob-' + a.key" :value="a.key">
+                      {{ a.key }} — {{ a.desc }}
+                    </option>
+                  </optgroup>
+                </select>
+
+                <span class="text-slate-400 text-[11px] font-sans">或</span>
+
+                <!-- 名稱輸入框 (支援自由鍵入與自動補齊) -->
+                <div class="relative">
+                  <input 
+                    ref="editAttrKeyInputRef"
+                    v-model="editingKey"
+                    :list="`datalist-sc-edit-key-${node.id}`"
+                    type="text"
+                    placeholder="名稱"
+                    class="h-7 w-28 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                    @keydown.enter.prevent="editAttrValInputRef?.focus()"
+                    @keydown.esc.prevent="cancelEditAttr"
+                    @click.stop
+                  />
+                  <datalist :id="`datalist-sc-edit-key-${node.id}`">
+                    <option v-for="a in allSuggestedAttrs" :key="a.key" :value="a.key">
+                      {{ a.desc }}
+                    </option>
+                  </datalist>
+                </div>
+
+                <span class="text-slate-500 font-extrabold">=</span>
+
+                <!-- 數值輸入框 (支援枚舉值 datalist) -->
+                <div class="relative">
+                  <input 
+                    ref="editAttrValInputRef"
+                    v-model="editingVal"
+                    :list="`datalist-sc-edit-val-${node.id}`"
+                    type="text"
+                    placeholder="數值"
+                    class="h-7 w-36 px-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-xs font-mono focus:outline-none focus:border-amber-500 text-slate-800 dark:text-slate-100"
+                    @keydown.enter.prevent="submitEditAttr"
+                    @keydown.esc.prevent="cancelEditAttr"
+                    @click.stop
+                  />
+                  <datalist :id="`datalist-sc-edit-val-${node.id}`">
+                    <option v-for="val in editAttrSuggestedValues" :key="val" :value="val" />
+                  </datalist>
+                </div>
+
+                <button 
+                  @click.stop="submitEditAttr"
+                  class="h-7 px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                  title="儲存修改 (Enter)"
+                >
+                  <span>✓ 儲存</span>
+                </button>
+                <button 
+                  @click.stop="cancelEditAttr"
+                  class="h-7 px-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg cursor-pointer"
+                  title="取消 (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             <!-- 正常顯示狀態（點擊進入編輯） -->
@@ -433,41 +593,117 @@
           </template>
         </div>
 
-        <!-- 行內屬性新增 -->
-        <div v-if="isAddingAttr" class="inline-flex items-center space-x-1 p-1 rounded-lg bg-cyan-100/90 dark:bg-cyan-950/90 border border-cyan-400 dark:border-cyan-700 shadow-sm" @click.stop @dragstart.stop draggable="false">
-          <input 
-            ref="attrKeyInputRef"
-            v-model="newAttrKey"
-            type="text"
-            placeholder="名稱 (如 src)"
-            class="w-24 px-2 py-0.5 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
-            @keydown.enter.prevent="attrValInputRef?.focus()"
-            @keydown.esc.prevent="cancelAddAttr"
-            @click.stop
-          />
-          <span class="text-slate-500 font-bold">=</span>
-          <input 
-            ref="attrValInputRef"
-            v-model="newAttrVal"
-            type="text"
-            placeholder="值 (如 logo.png)"
-            class="w-24 px-2 py-0.5 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
-            @keydown.enter.prevent="submitAddAttr"
-            @keydown.esc.prevent="cancelAddAttr"
-            @click.stop
-          />
-          <button 
-            @click.stop="submitAddAttr"
-            class="px-2 py-0.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-          >
-            ✓
-          </button>
-          <button 
-            @click.stop="cancelAddAttr"
-            class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs rounded cursor-pointer"
-          >
-            ✕
-          </button>
+        <!-- 行內屬性新增 (支援下拉選單、自由鍵入與快捷標籤) -->
+        <div 
+          v-if="isAddingAttr" 
+          class="flex flex-col gap-1.5 p-2 rounded-xl bg-cyan-50/95 dark:bg-cyan-950/95 border border-cyan-400 dark:border-cyan-700 shadow-md my-1.5 text-xs font-mono" 
+          @click.stop 
+          @dragstart.stop 
+          draggable="false"
+        >
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- 下拉選擇選單 -->
+            <select 
+              @change="onSelectAddAttrPreset" 
+              class="h-7 px-2 bg-white dark:bg-slate-900 border border-cyan-400 dark:border-cyan-700 rounded-lg text-xs font-mono text-cyan-900 dark:text-cyan-200 font-bold focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer shadow-xs max-w-44"
+              title="下拉挑選常用屬性"
+            >
+              <option value="" disabled selected>▾ 下拉挑選屬性...</option>
+              <optgroup v-if="tagSpecificAttrs.length > 0" :label="`✨ <${node.tag}> 專屬屬性`">
+                <option v-for="a in tagSpecificAttrs" :key="'sc-add-spec-' + a.key" :value="a.key">
+                  {{ a.key }} — {{ a.desc }}
+                </option>
+              </optgroup>
+              <optgroup label="🌐 通用共同屬性 (id/class/style...)">
+                <option v-for="a in globalAttrs" :key="'sc-add-glob-' + a.key" :value="a.key">
+                  {{ a.key }} — {{ a.desc }}
+                </option>
+              </optgroup>
+            </select>
+
+            <span class="text-slate-400 text-[11px] font-sans">或</span>
+
+            <!-- 自由鍵入輸入框 + datalist -->
+            <div class="relative">
+              <input 
+                ref="attrKeyInputRef"
+                v-model="newAttrKey"
+                :list="`datalist-sc-add-key-${node.id}`"
+                type="text"
+                placeholder="自行輸入名稱"
+                class="h-7 w-32 px-2 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-lg text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
+                @keydown.enter.prevent="attrValInputRef?.focus()"
+                @keydown.esc.prevent="cancelAddAttr"
+                @click.stop
+              />
+              <datalist :id="`datalist-sc-add-key-${node.id}`">
+                <option v-for="a in allSuggestedAttrs" :key="a.key" :value="a.key">
+                  {{ a.desc }}
+                </option>
+              </datalist>
+            </div>
+
+            <span class="text-slate-500 font-extrabold">=</span>
+
+            <!-- 屬性數值輸入框 + 候選值 datalist -->
+            <div class="relative">
+              <input 
+                ref="attrValInputRef"
+                v-model="newAttrVal"
+                :list="`datalist-sc-add-val-${node.id}`"
+                type="text"
+                placeholder="填寫數值 (如 logo.png)"
+                class="h-7 w-36 px-2 bg-white dark:bg-slate-900 border border-cyan-300 dark:border-cyan-700 rounded-lg text-xs font-mono focus:outline-none focus:border-cyan-500 text-slate-800 dark:text-slate-100"
+                @keydown.enter.prevent="submitAddAttr"
+                @keydown.esc.prevent="cancelAddAttr"
+                @click.stop
+              />
+              <datalist :id="`datalist-sc-add-val-${node.id}`">
+                <option v-for="val in newAttrSuggestedValues" :key="val" :value="val" />
+              </datalist>
+            </div>
+
+            <!-- 確認與取消按鈕 -->
+            <button 
+              @click.stop="submitAddAttr"
+              class="h-7 px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+              title="確認加入 (Enter)"
+            >
+              <span>✓ 加入</span>
+            </button>
+            <button 
+              @click.stop="cancelAddAttr"
+              class="h-7 px-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs rounded-lg cursor-pointer transition-colors"
+              title="取消 (Esc)"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- 常用快捷標籤膠囊列 (Quick Chips) -->
+          <div class="flex items-center gap-1 flex-wrap text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-cyan-200/60 dark:border-cyan-900/60">
+            <span class="font-sans font-bold text-cyan-800 dark:text-cyan-300">常用點選:</span>
+            <template v-if="tagSpecificAttrs.length > 0">
+              <button
+                v-for="chip in tagSpecificAttrs"
+                :key="'sc-q-spec-' + chip.key"
+                @click.stop="applyQuickChip(chip.key, 'add')"
+                class="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/80 hover:bg-cyan-200 dark:hover:bg-cyan-800 border border-cyan-300 dark:border-cyan-700 text-cyan-900 dark:text-cyan-200 font-mono font-bold cursor-pointer transition-colors"
+                :title="chip.desc"
+              >
+                ✨ {{ chip.key }}
+              </button>
+            </template>
+            <button
+              v-for="chip in globalAttrs.slice(0, 4)"
+              :key="'sc-q-glob-' + chip.key"
+              @click.stop="applyQuickChip(chip.key, 'add')"
+              class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono cursor-pointer transition-colors"
+              :title="chip.desc"
+            >
+              {{ chip.key }}
+            </button>
+          </div>
         </div>
 
         <button 
@@ -616,6 +852,7 @@
 <script setup>
 import { ref, nextTick, computed } from 'vue';
 import { usePuzzleEngine } from '../../composables/usePuzzleEngine';
+import { getAvailableAttributesForTag, getSuggestedValuesForAttr } from '../../data/htmlAttributes';
 
 const props = defineProps({
   node: { type: Object, required: true },
@@ -760,6 +997,80 @@ function cancelEditAttr() {
   editingAttrKey.value = null;
   editingKey.value = '';
   editingVal.value = '';
+}
+
+// 標籤屬性知識庫資訊與推薦
+const tagAttrMeta = computed(() => {
+  return getAvailableAttributesForTag(props.node.tag);
+});
+
+const tagSpecificAttrs = computed(() => tagAttrMeta.value.specific || []);
+const globalAttrs = computed(() => tagAttrMeta.value.global || []);
+const allSuggestedAttrs = computed(() => tagAttrMeta.value.all || []);
+
+// 根據當前輸入的 key 動態計算建議的候選值清單（如 input 的 type、a 的 target）
+const newAttrSuggestedValues = computed(() => {
+  return getSuggestedValuesForAttr(props.node.tag, newAttrKey.value);
+});
+
+const editAttrSuggestedValues = computed(() => {
+  return getSuggestedValuesForAttr(props.node.tag, editingKey.value);
+});
+
+// 下拉選單選擇屬性（新增模式）
+function onSelectAddAttrPreset(e) {
+  const chosenKey = e.target.value;
+  if (!chosenKey) return;
+  newAttrKey.value = chosenKey;
+  const meta = allSuggestedAttrs.value.find(a => a.key === chosenKey);
+  if (meta && meta.defaultVal && !newAttrVal.value) {
+    newAttrVal.value = meta.defaultVal;
+  }
+  e.target.value = '';
+  nextTick(() => {
+    attrValInputRef.value?.focus();
+    attrValInputRef.value?.select();
+  });
+}
+
+// 下拉選單選擇屬性（編輯模式）
+function onSelectEditAttrPreset(e) {
+  const chosenKey = e.target.value;
+  if (!chosenKey) return;
+  editingKey.value = chosenKey;
+  const meta = allSuggestedAttrs.value.find(a => a.key === chosenKey);
+  if (meta && meta.defaultVal && (!editingVal.value || editingVal.value === '')) {
+    editingVal.value = meta.defaultVal;
+  }
+  e.target.value = '';
+  nextTick(() => {
+    editAttrValInputRef.value?.focus();
+    editAttrValInputRef.value?.select();
+  });
+}
+
+// 快速點選常用屬性標籤膠囊
+function applyQuickChip(key, mode = 'add') {
+  const meta = allSuggestedAttrs.value.find(a => a.key === key);
+  if (mode === 'add') {
+    newAttrKey.value = key;
+    if (meta && meta.defaultVal && !newAttrVal.value) {
+      newAttrVal.value = meta.defaultVal;
+    }
+    nextTick(() => {
+      attrValInputRef.value?.focus();
+      attrValInputRef.value?.select();
+    });
+  } else {
+    editingKey.value = key;
+    if (meta && meta.defaultVal && (!editingVal.value || editingVal.value === '')) {
+      editingVal.value = meta.defaultVal;
+    }
+    nextTick(() => {
+      editAttrValInputRef.value?.focus();
+      editAttrValInputRef.value?.select();
+    });
+  }
 }
 
 // 拖曳現有節點（完整包含其所有 children 與內容）
