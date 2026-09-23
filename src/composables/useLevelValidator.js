@@ -403,8 +403,13 @@ export function useLevelValidator() {
         const divCloseIdx = nodes.findIndex(n => n.type === 'close_tag' && n.tag === 'div');
         const hasBrClose = nodes.some(n => n.type === 'close_tag' && n.tag === 'br');
 
-        results['has_container'] = divOpenIdx !== -1 && divCloseIdx !== -1 && divOpenIdx < divCloseIdx && (t1Idx === -1 || divOpenIdx < t1Idx) && (t2Idx === -1 || t2Idx < divCloseIdx);
-        results['has_br_tag'] = brIdx !== -1 && (t1Idx === -1 || t1Idx < brIdx) && (t2Idx === -1 || brIdx < t2Idx);
+        // 必須同時具備「時間」與「地點」兩段文字，且文字積木數量為 2
+        const textNodes = nodes.filter(n => n.type === 'text');
+        const hasCorrectTexts = t1Idx !== -1 && t2Idx !== -1 && textNodes.length === 2;
+
+        results['has_container'] = divOpenIdx !== -1 && divCloseIdx !== -1 && divOpenIdx < divCloseIdx &&
+          hasCorrectTexts && divOpenIdx < t1Idx && t2Idx < divCloseIdx;
+        results['has_br_tag'] = brIdx !== -1 && hasCorrectTexts && t1Idx < brIdx && brIdx < t2Idx;
         results['understands_void'] = brIdx !== -1 && !hasBrClose;
         break;
       }
@@ -438,7 +443,9 @@ export function useLevelValidator() {
 
         const navInHeader = headerNode?.children?.some(c => c.tag === 'nav');
         const artInMain = mainNode?.children?.find(c => c.tag === 'article');
-        const h2BeforePInArt = artInMain && (artInMain.children || []).findIndex(c => c.tag === 'h2') < (artInMain.children || []).findIndex(c => c.tag === 'p');
+        const h2IdxInArt = (artInMain?.children || []).findIndex(c => c.tag === 'h2');
+        const pIdxInArt = (artInMain?.children || []).findIndex(c => c.tag === 'p');
+        const h2BeforePInArt = artInMain && h2IdxInArt !== -1 && pIdxInArt !== -1 && h2IdxInArt < pIdxInArt;
 
         results['chk_header_nav'] = !!(headerNode && navInHeader && (mainIdx === -1 || headerIdx < mainIdx) && (footerIdx === -1 || headerIdx < footerIdx));
         results['chk_main_article'] = !!(mainNode && artInMain && h2BeforePInArt && (headerIdx === -1 || headerIdx < mainIdx) && (footerIdx === -1 || mainIdx < footerIdx));
