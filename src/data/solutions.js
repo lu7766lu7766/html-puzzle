@@ -106,7 +106,8 @@ export const LEVEL_SOLUTIONS = {
       label: '<img>',
       attrs: {
         src: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300&auto=format&fit=crop&q=60',
-        alt: '特工工作筆電'
+        alt: '特工工作筆電',
+        class: 'rounded-lg shadow-md max-w-[240px] my-2'
       }
     }
   ],
@@ -166,7 +167,8 @@ export const LEVEL_SOLUTIONS = {
           label: '<img>',
           attrs: {
             src: 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_160x56dp.png',
-            alt: 'Google 首頁'
+            alt: 'Google 首頁',
+            class: 'h-14 object-contain inline-block p-2 bg-white rounded border border-slate-700 hover:scale-105 transition-transform'
           }
         }
       ]

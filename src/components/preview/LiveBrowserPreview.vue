@@ -100,6 +100,10 @@ const fullDocumentHtml = computed(() => {
       button:hover {
         background: #e2e8f0;
       }
+      img {
+        max-width: 100%;
+        height: auto;
+      }
     </style>
   </head>
   <body>

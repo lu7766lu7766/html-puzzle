@@ -13,7 +13,9 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 3,
     learningGoal: "掌握起始標籤、內容與結束標籤的三大構成與閉合關係。",
     targetDescription: "使用 <p> 標籤完整包覆文字，呈現一段獨立的歡迎公告段落。",
-    targetHtml: `<p style="font-size: 16px; color: #1e293b; margin: 0; line-height: 1.6; font-weight: 500;">歡迎加入資訊科技研習社！</p>`,
+    targetHtml: `<p>
+歡迎加入資訊科技研習社！
+</p>`,
     initialBlocks: [
       { id: "b1", type: "open_tag", tag: "p", label: "<p>" },
       { id: "b2", type: "text", text: "歡迎加入資訊科技研習社！" },
@@ -43,7 +45,11 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 5,
     learningGoal: "理解文檔流向量、Enter 不等於換行，以及空標籤（自閉合）的特性。",
     targetDescription: "在 <div> 內將兩行文字透過自閉合空標籤 <br /> 分隔換行顯示。",
-    targetHtml: `<div style="font-size: 15px; color: #1e293b; line-height: 1.7; font-weight: 500;">活動時間：本週五下午四點<br />活動地點：第二電腦教室</div>`,
+    targetHtml: `<div>
+活動時間：本週五下午四點
+<br />
+活動地點：第二電腦教室
+</div>`,
     initialBlocks: [
       { id: "b_div_open", type: "open_tag", tag: "div", label: "<div>" },
       { id: "b_t1", type: "text", text: "活動時間：本週五下午四點" },
@@ -74,10 +80,16 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 7,
     learningGoal: "建立 DOCTYPE、html 根元素、head 與 body 的完整巢狀架構思維。",
     targetDescription: "標準現代網頁結構：含 DOCTYPE、head 標題，以及 body 內的 h1 大標題與 p 內文。",
-    targetHtml: `<div style="font-family: system-ui, sans-serif; padding: 4px;">
-  <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">歡迎來到校園資訊網</h1>
-  <p style="font-size: 15px; color: #475569; margin: 0; line-height: 1.6;">今日熱門社團活動報導</p>
-</div>`,
+    targetHtml: `<!DOCTYPE html>
+<html>
+  <head>
+    <title>校園資訊網</title>
+  </head>
+  <body>
+    <h1>歡迎來到校園資訊網</h1>
+    <p>今日熱門社團活動報導</p>
+  </body>
+</html>`,
     initialBlocks: [
       { id: "b_dtd", type: "void_tag", tag: "!DOCTYPE html", label: "<!DOCTYPE html>" },
       { id: "b_html", type: "container", tag: "html", label: "<html>...</html>", children: [] },
@@ -111,18 +123,16 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 7,
     learningGoal: "告別 div 地獄，正確運用 header, nav, main, article, footer 佈局。",
     targetDescription: "語意化版面：表頭 header 包含導覽 nav，主體 main 包含文章 article，底部配置 footer 版權聲明。",
-    targetHtml: `<div style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; gap: 8px;">
-  <header style="background: #e0e7ff; padding: 8px 12px; border-radius: 8px; border: 1px solid #c7d2fe;">
-    <nav style="font-size: 13px; color: #3730a3; font-weight: bold;">首頁 | 最新專題 | 關於我們</nav>
-  </header>
-  <main style="background: #ffffff; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
-    <article>
-      <h2 style="font-size: 16px; font-weight: bold; color: #0f172a; margin: 0 0 6px 0;">探索 AI 人工智慧新浪潮</h2>
-      <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;">高中生如何運用生成式 AI 提升自主學習效率？</p>
-    </article>
-  </main>
-  <footer style="font-size: 11px; color: #94a3b8; text-align: center; padding: 4px; border-top: 1px solid #f1f5f9;">© 2026 校刊社版權所有</footer>
-</div>`,
+    targetHtml: `<header>
+  <nav>首頁 | 最新專題 | 關於我們</nav>
+</header>
+<main>
+  <article>
+    <h2>探索 AI 人工智慧新浪潮</h2>
+    <p>高中生如何運用生成式 AI 提升自主學習效率？</p>
+  </article>
+</main>
+<footer>© 2026 校刊社版權所有</footer>`,
     initialBlocks: [
       { id: "b_header", type: "container", tag: "header", label: "<header> 表頭", children: [] },
       { id: "b_nav", type: "container", tag: "nav", label: "<nav> 導覽", text: "首頁 | 最新專題 | 關於我們" },
@@ -151,10 +161,7 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 5,
     learningGoal: "掌握 id, class, style 與 onclick 四大屬性的語法與作用。",
     targetDescription: "具備紅色字體、id/class 與點擊互動 onclick 彈窗的按鈕元件。",
-    targetHtml: `<div style="padding: 16px; text-align: center;">
-  <button id="like-btn" class="btn-primary" style="color: crimson; font-weight: bold; background: #fee2e2; border: 2px solid crimson; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 15px;" onclick="alert('感謝特工點讚！')">點我送出愛心 ❤️</button>
-  <p style="font-size: 11px; color: #64748b; margin-top: 8px;">（點擊上方按鈕可測試 onclick 互動彈窗）</p>
-</div>`,
+    targetHtml: `<button id="like-btn" class="btn-primary" style="color:crimson;font-weight:bold;" onclick="alert('感謝特工點讚！')">點我送出愛心</button>`,
     initialBlocks: [
       { 
         id: "b_btn", 
@@ -189,14 +196,12 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 5,
     learningGoal: "熟練掌握標題層次、項目符號清單、超連結與圖片標籤。",
     targetDescription: "特工名片：醒目的一級標題、項目清單與工作筆電照片。",
-    targetHtml: `<div style="font-family: system-ui, sans-serif;">
-  <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">資訊特工：小明</h1>
-  <ul style="margin: 0 0 10px 18px; padding: 0; color: #334155; font-size: 13px; line-height: 1.6;">
-    <li>專業：前端架構與 DOM 樹拼裝</li>
-    <li>徽章：獲頒全校資訊解謎特工第一名</li>
-  </ul>
-  <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300&auto=format&fit=crop&q=60" alt="特工工作筆電" style="max-width: 200px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: block; border: 1px solid #cbd5e1;" />
-</div>`,
+    targetHtml: `<h1>資訊特工：小明</h1>
+<ul>
+  <li>專業：前端架構與 DOM 樹拼裝</li>
+  <li>徽章：獲頒全校資訊解謎特工第一名</li>
+</ul>
+<img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300&auto=format&fit=crop&q=60" alt="特工工作筆電" class="rounded-lg shadow-md max-w-[240px] my-2" />`,
     initialBlocks: [
       { id: "b_h1_agent", type: "container", tag: "h1", label: "<h1>", text: "資訊特工：小明" },
       { id: "b_ul", type: "container", tag: "ul", label: "<ul> 清單", children: [] },
@@ -233,17 +238,15 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 5,
     learningGoal: "掌握 input text、placeholder、radio 單選互斥 name 屬性與 label 綁定體驗。",
     targetDescription: "選修表單：具備灰字提示的學號輸入框，以及透過 label 包裹且互相排斥的上午/下午單選時段。",
-    targetHtml: `<div style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; gap: 10px;">
-  <input type="text" placeholder="請輸入學號" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 180px;" />
-  <div style="display: flex; gap: 14px; align-items: center;">
-    <label style="font-size: 13px; display: inline-flex; align-items: center; cursor: pointer; color: #1e293b;">
-      <input type="radio" name="shift" value="morning" style="margin-right: 5px;" checked /> 上午時段
-    </label>
-    <label style="font-size: 13px; display: inline-flex; align-items: center; cursor: pointer; color: #1e293b;">
-      <input type="radio" name="shift" value="afternoon" style="margin-right: 5px;" /> 下午時段
-    </label>
-  </div>
-</div>`,
+    targetHtml: `<input type="text" placeholder="請輸入學號" />
+<label>
+   上午時段
+  <input type="radio" name="shift" value="morning" />
+</label>
+<label>
+   下午時段
+  <input type="radio" name="shift" value="afternoon" />
+</label>`,
     initialBlocks: [
       { 
         id: "b_inp_txt", 
@@ -303,12 +306,9 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 2,
     learningGoal: "實踐標籤巢狀包覆（<a> 包覆 <img>）與 href 屬性跳轉應用。",
     targetDescription: "圖片超連結傳送門：點擊 Google 圖片標誌即可在新分頁開啟 Google 官網。",
-    targetHtml: `<div style="padding: 10px; text-align: center;">
-  <p style="font-size: 12px; color: #64748b; margin: 0 0 6px 0;">👇 點擊下方 Google 圖片可跳轉至官網：</p>
-  <a href="https://www.google.com" target="_blank" style="display: inline-block; padding: 6px; border: 2px dashed #6366f1; border-radius: 10px; background: #f8fafc; transition: transform 0.2s;">
-    <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_160x56dp.png" alt="Google 首頁" style="height: 48px; display: block;" />
-  </a>
-</div>`,
+    targetHtml: `<a href="https://www.google.com" target="_blank">
+  <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_160x56dp.png" alt="Google 首頁" class="h-14 object-contain inline-block p-2 bg-white rounded border border-slate-700 hover:scale-105 transition-transform" />
+</a>`,
     initialBlocks: [
       { 
         id: "b_boss1_a", 
@@ -349,24 +349,23 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 9,
     learningGoal: "綜合應用 placeholder、radio 單選互斥 name、label 綁定與按鈕元件。",
     targetDescription: "課堂綜合表單：姓名輸入框（反灰王XX）、三個互斥時段單選（早/中/晚）與送出按鈕。",
-    targetHtml: `<div style="font-family: system-ui, sans-serif; display: flex; flex-direction: column; gap: 10px; max-width: 280px;">
-  <div>
-    <span style="font-size: 13px; font-weight: bold; color: #1e293b;">尊姓大名 </span>
-    <input type="text" placeholder="王XX" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-left: 4px; width: 120px;" />
-  </div>
-  <div style="display: flex; gap: 12px; align-items: center;">
-    <label style="font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; color: #1e293b;">
-      <input type="radio" name="time" value="morning" style="margin-right: 4px;" checked /> 早上
-    </label>
-    <label style="font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; color: #1e293b;">
-      <input type="radio" name="time" value="noon" style="margin-right: 4px;" /> 中午
-    </label>
-    <label style="font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; color: #1e293b;">
-      <input type="radio" name="time" value="evening" style="margin-right: 4px;" /> 晚上
-    </label>
-  </div>
-  <button style="align-self: flex-start; background: #4f46e5; color: white; border: none; padding: 5px 16px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;">送出</button>
-</div>`,
+    targetHtml: `<div>
+  尊姓大名 
+  <input type="text" placeholder="王XX" />
+</div>
+<label>
+   早上
+  <input type="radio" name="time" value="morning" />
+</label>
+<label>
+   中午
+  <input type="radio" name="time" value="noon" />
+</label>
+<label>
+   晚上
+  <input type="radio" name="time" value="evening" />
+</label>
+<button>送出</button>`,
     initialBlocks: [
       { 
         id: "b_f_name", 
@@ -456,10 +455,7 @@ export const PUZZLE_LEVELS = [
     requiredBlocksCount: 1,
     learningGoal: "比較傳統 <s><font> 與現代標準 <span> + style 的結構分離心法。",
     targetDescription: "指定文字「test」呈現紅色、帶有刪除線與 32px 大字體效果。",
-    targetHtml: `<div style="padding: 14px; text-align: center;">
-  <p style="font-size: 12px; color: #64748b; margin: 0 0 8px 0;">最終目標外觀：</p>
-  <span style="text-decoration: line-through; color: red; font-size: 32px; font-weight: bold; font-family: system-ui, sans-serif;">test</span>
-</div>`,
+    targetHtml: `<span style="text-decoration: line-through; color: red; font-size: 32px;">test</span>`,
     initialBlocks: [
       { 
         id: "b_boss3_span", 
