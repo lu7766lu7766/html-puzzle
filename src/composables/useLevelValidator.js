@@ -388,10 +388,14 @@ export function useLevelValidator() {
         const textIdx = nodes.findIndex(n => n.type === 'text' && (n.text?.includes('歡迎') || n.text?.includes('研習社')));
         const pCloseIdx = nodes.findIndex(n => n.type === 'close_tag' && n.tag === 'p');
         const hasSpan = nodes.some(n => n.tag === 'span');
+        const pOpenCount = nodes.filter(n => n.type === 'open_tag' && n.tag === 'p').length;
+        const pCloseCount = nodes.filter(n => n.type === 'close_tag' && n.tag === 'p').length;
+        const textCount = nodes.filter(n => n.type === 'text').length;
+        const noDuplicateOrExtra = nodes.length === 3 && pOpenCount === 1 && textCount === 1 && pCloseCount === 1;
 
         results['has_p_open'] = pOpenIdx !== -1 && !hasSpan && (textIdx === -1 || pOpenIdx < textIdx) && (pCloseIdx === -1 || pOpenIdx < pCloseIdx);
         results['has_content'] = textIdx !== -1 && (pOpenIdx === -1 || pOpenIdx < textIdx) && (pCloseIdx === -1 || textIdx < pCloseIdx);
-        results['has_p_close'] = pCloseIdx !== -1 && (pOpenIdx !== -1 && pOpenIdx < pCloseIdx) && (textIdx !== -1 && textIdx < pCloseIdx);
+        results['has_p_close'] = pCloseIdx !== -1 && (pOpenIdx !== -1 && pOpenIdx < pCloseIdx) && (textIdx !== -1 && textIdx < pCloseIdx) && !hasSpan && noDuplicateOrExtra;
         break;
       }
 
@@ -406,9 +410,10 @@ export function useLevelValidator() {
         // 必須同時具備「時間」與「地點」兩段文字，且文字積木數量為 2
         const textNodes = nodes.filter(n => n.type === 'text');
         const hasCorrectTexts = t1Idx !== -1 && t2Idx !== -1 && textNodes.length === 2;
+        const noExtraNodes = nodes.length === 5;
 
         results['has_container'] = divOpenIdx !== -1 && divCloseIdx !== -1 && divOpenIdx < divCloseIdx &&
-          hasCorrectTexts && divOpenIdx < t1Idx && t2Idx < divCloseIdx;
+          hasCorrectTexts && divOpenIdx < t1Idx && t2Idx < divCloseIdx && noExtraNodes;
         results['has_br_tag'] = brIdx !== -1 && hasCorrectTexts && t1Idx < brIdx && brIdx < t2Idx;
         results['understands_void'] = brIdx !== -1 && !hasBrClose;
         break;
@@ -421,14 +426,17 @@ export function useLevelValidator() {
         const bodyNode = htmlNode?.children?.find(c => c.tag === 'body');
         const headIdx = htmlNode?.children?.indexOf(headNode) ?? -1;
         const bodyIdx = htmlNode?.children?.indexOf(bodyNode) ?? -1;
-        const titleInHead = headNode?.children?.some(c => c.tag === 'title' && c.text?.includes('校園資訊網'));
+        const titleInHead = (headNode?.children || []).some(c => c.tag === 'title' && c.text?.includes('校園資訊網')) && (headNode?.children?.length === 1);
         const h1InBody = bodyNode?.children?.some(c => c.tag === 'h1');
         const pInBody = bodyNode?.children?.some(c => c.tag === 'p');
-        const h1BeforeP = bodyNode?.children?.findIndex(c => c.tag === 'h1') < bodyNode?.children?.findIndex(c => c.tag === 'p');
+        const h1IdxInBody = (bodyNode?.children || []).findIndex(c => c.tag === 'h1');
+        const pIdxInBody = (bodyNode?.children || []).findIndex(c => c.tag === 'p');
+        const bodyOrdered = h1IdxInBody !== -1 && pIdxInBody !== -1 && h1IdxInBody < pIdxInBody && (bodyNode?.children?.length === 2);
+        const isCleanRoot = nodes.length === 2 && nodes[0]?.tag === '!DOCTYPE html' && nodes[1]?.tag === 'html';
 
         results['chk_dtd'] = dtdAtTop;
         results['chk_head'] = !!(htmlNode && headNode && titleInHead && (bodyIdx === -1 || headIdx < bodyIdx));
-        results['chk_body'] = !!(htmlNode && bodyNode && h1InBody && pInBody && h1BeforeP && (headIdx === -1 || headIdx < bodyIdx));
+        results['chk_body'] = !!(htmlNode && bodyNode && h1InBody && pInBody && bodyOrdered && (headIdx === -1 || headIdx < bodyIdx) && isCleanRoot);
         break;
       }
 
@@ -441,25 +449,27 @@ export function useLevelValidator() {
         const mainNode = mainIdx !== -1 ? nodes[mainIdx] : null;
         const footerNode = footerIdx !== -1 ? nodes[footerIdx] : null;
 
-        const navInHeader = headerNode?.children?.some(c => c.tag === 'nav');
+        const navInHeader = (headerNode?.children || []).some(c => c.tag === 'nav') && (headerNode?.children?.length === 1);
         const artInMain = mainNode?.children?.find(c => c.tag === 'article');
         const h2IdxInArt = (artInMain?.children || []).findIndex(c => c.tag === 'h2');
         const pIdxInArt = (artInMain?.children || []).findIndex(c => c.tag === 'p');
-        const h2BeforePInArt = artInMain && h2IdxInArt !== -1 && pIdxInArt !== -1 && h2IdxInArt < pIdxInArt;
+        const h2BeforePInArt = artInMain && h2IdxInArt !== -1 && pIdxInArt !== -1 && h2IdxInArt < pIdxInArt && (artInMain?.children?.length === 2);
+        const isCleanRoot = nodes.length === 3 && nodes[0]?.tag === 'header' && nodes[1]?.tag === 'main' && nodes[2]?.tag === 'footer';
 
         results['chk_header_nav'] = !!(headerNode && navInHeader && (mainIdx === -1 || headerIdx < mainIdx) && (footerIdx === -1 || headerIdx < footerIdx));
         results['chk_main_article'] = !!(mainNode && artInMain && h2BeforePInArt && (headerIdx === -1 || headerIdx < mainIdx) && (footerIdx === -1 || mainIdx < footerIdx));
-        results['chk_footer'] = !!(footerNode && (headerIdx === -1 || headerIdx < footerIdx) && (mainIdx === -1 || mainIdx < footerIdx));
+        results['chk_footer'] = !!(footerNode && (headerIdx === -1 || headerIdx < footerIdx) && (mainIdx === -1 || mainIdx < footerIdx) && isCleanRoot);
         break;
       }
 
       case 'stage-5': {
-        const btnNode = nodes.find(n => n.tag === 'button');
+        const isCleanRoot = nodes.length === 1 && nodes[0]?.tag === 'button';
+        const btnNode = isCleanRoot ? nodes[0] : nodes.find(n => n.tag === 'button');
         const attrs = btnNode?.attrs || {};
         results['chk_id'] = attrs.id === 'like-btn';
         results['chk_class'] = attrs.class === 'btn-primary';
         results['chk_style'] = typeof attrs.style === 'string' && attrs.style.includes('color');
-        results['chk_onclick'] = typeof attrs.onclick === 'string' && attrs.onclick.includes('alert(');
+        results['chk_onclick'] = typeof attrs.onclick === 'string' && attrs.onclick.includes('alert(') && isCleanRoot;
         break;
       }
 
@@ -472,14 +482,15 @@ export function useLevelValidator() {
         const ulChildren = ulNode?.children || [];
         const li1Idx = ulChildren.findIndex(c => c.tag === 'li' && c.text?.includes('專業'));
         const li2Idx = ulChildren.findIndex(c => c.tag === 'li' && c.text?.includes('徽章'));
-        const ulHasCorrectLi = li1Idx !== -1 && li2Idx !== -1 && li1Idx < li2Idx;
+        const ulHasCorrectLi = ulChildren.length === 2 && li1Idx === 0 && li2Idx === 1;
 
         const imgNode = imgIdx !== -1 ? nodes[imgIdx] : null;
         const imgValid = !!(imgNode && imgNode.attrs?.src && imgNode.attrs?.alt);
+        const isCleanRoot = nodes.length === 3 && nodes[0]?.tag === 'h1' && nodes[1]?.tag === 'ul' && nodes[2]?.tag === 'img';
 
         results['chk_h1'] = h1Idx !== -1 && (ulIdx === -1 || h1Idx < ulIdx) && (imgIdx === -1 || h1Idx < imgIdx);
         results['chk_ul_li'] = !!(ulNode && ulHasCorrectLi && (h1Idx === -1 || h1Idx < ulIdx) && (imgIdx === -1 || ulIdx < imgIdx));
-        results['chk_img'] = !!(imgValid && (h1Idx === -1 || h1Idx < imgIdx) && (ulIdx === -1 || ulIdx < imgIdx));
+        results['chk_img'] = !!(imgValid && (h1Idx === -1 || h1Idx < imgIdx) && (ulIdx === -1 || ulIdx < imgIdx) && isCleanRoot);
         break;
       }
 
@@ -497,21 +508,22 @@ export function useLevelValidator() {
         const radiosMutual = !!(r1 && r2 && r1.attrs?.name && r1.attrs?.name === r2.attrs?.name);
         const labelsOrdered = lbl1Idx !== -1 && lbl2Idx !== -1 && lbl1Idx < lbl2Idx;
         const inputAtTop = inpIdx !== -1 && (lbl1Idx === -1 || inpIdx < lbl1Idx) && (lbl2Idx === -1 || inpIdx < lbl2Idx);
+        const isCleanRoot = nodes.length === 3 && nodes[0]?.tag === 'input' && nodes[1]?.tag === 'label' && nodes[2]?.tag === 'label';
 
         results['chk_inp_placeholder'] = inputAtTop && !!nodes[inpIdx]?.attrs?.placeholder;
         results['chk_radio_mutual'] = radiosMutual;
-        results['chk_label_wrap'] = labelsOrdered && !!r1 && !!r2;
+        results['chk_label_wrap'] = labelsOrdered && !!r1 && !!r2 && isCleanRoot;
         break;
       }
 
       case 'boss-1': {
-        const aNode = nodes.find(n => n.tag === 'a');
-        const hasImgInA = (aNode?.children || []).some(c => c.tag === 'img');
+        const isCleanRoot = nodes.length === 1 && nodes[0]?.tag === 'a';
+        const aNode = isCleanRoot ? nodes[0] : nodes.find(n => n.tag === 'a');
+        const hasImgInA = (aNode?.children || []).some(c => c.tag === 'img') && (aNode?.children?.length === 1);
         const hasHrefGoogle = typeof aNode?.attrs?.href === 'string' && aNode.attrs.href.includes('https://www.google.com');
 
         results['chk_nest_a_img'] = hasImgInA;
-        results['chk_href_google'] = hasHrefGoogle;
-        results['chk_img_clickable'] = hasImgInA && hasHrefGoogle;
+        results['chk_href_google'] = hasHrefGoogle && isCleanRoot;
         break;
       }
 
@@ -537,11 +549,12 @@ export function useLevelValidator() {
         const labelsInOrder = l1Idx !== -1 && l2Idx !== -1 && l3Idx !== -1 && l1Idx < l2Idx && l2Idx < l3Idx;
         const nameBeforeLabels = nameDivIdx !== -1 && (l1Idx === -1 || nameDivIdx < l1Idx);
         const btnAfterLabels = btnIdx !== -1 && (l3Idx === -1 || l3Idx < btnIdx);
+        const isCleanRoot = nodes.length === 5 && nameDivIdx === 0 && l1Idx === 1 && l2Idx === 2 && l3Idx === 3 && btnIdx === 4;
 
         results['chk_placeholder_wang'] = !!(hasWangInp && nameBeforeLabels);
         results['chk_three_radio_name'] = radiosMatch;
         results['chk_labels_wrapped'] = labelsInOrder && !!(r1 && r2 && r3);
-        results['chk_submit_btn'] = !!(btnIdx !== -1 && btnAfterLabels);
+        results['chk_submit_btn'] = !!(btnIdx !== -1 && btnAfterLabels && isCleanRoot);
         break;
       }
 
@@ -557,6 +570,21 @@ export function useLevelValidator() {
         // 沙盒或其他自由關卡
         results['sandbox_any'] = (nodes && nodes.length > 0);
         break;
+    }
+
+    // 全面一致性防呆：若個別目標看似全數通過，但整體結構/順序/重複積木檢驗未達標，
+    // 確保不會出現目標達成度全滿 (100%) 的誤導狀態
+    if (level.checklist && level.checklist.length > 0) {
+      const allPassed = level.checklist.every(c => results[c.id]);
+      if (allPassed) {
+        const structureCheck = validateLevelSequenceAndStructure(level, canvasNodes, htmlCode);
+        if (!structureCheck.valid) {
+          const lastCheck = level.checklist[level.checklist.length - 1];
+          if (lastCheck) {
+            results[lastCheck.id] = false;
+          }
+        }
+      }
     }
 
     return results;
