@@ -54,7 +54,7 @@
           <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
             <span>目標達成度</span>
             <span :class="isGoalAchieved ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-800 dark:text-slate-200'">
-              {{ currentBlockCount }} / {{ requiredBlocks }}
+              {{ passedCount }} / {{ requiredBlocks }}
             </span>
           </div>
           <div class="w-full h-2 bg-slate-300 dark:bg-slate-800 rounded-full overflow-hidden">
