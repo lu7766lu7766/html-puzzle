@@ -42,16 +42,6 @@
         </div>
       </div>
 
-      <!-- 測試報告日誌 -->
-      <div class="w-full bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-3 mb-5 text-left font-mono space-y-1 max-h-32 overflow-y-auto">
-        <div class="text-xs text-slate-500 font-sans font-bold uppercase tracking-wider mb-1">
-          瀏覽器人機互動驗收紀錄：
-        </div>
-        <div v-for="(log, idx) in testReport.logs" :key="idx" class="text-emerald-700 dark:text-emerald-400 text-xs leading-relaxed font-semibold">
-          {{ log }}
-        </div>
-      </div>
-
       <!-- 下一步操作按鈕 -->
       <div class="w-full flex flex-col sm:flex-row items-center gap-2.5">
         <button 

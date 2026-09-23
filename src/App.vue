@@ -68,7 +68,7 @@
       @close="showHandbookModal = false"
     />
 
-    <!-- 3. 通關慶祝與人機驗收報告 -->
+    <!-- 3. 通關慶祝彈窗 -->
     <LevelSuccessModal
       v-if="showSuccessModal"
       :level="currentLevel"
@@ -78,7 +78,7 @@
       @close="showSuccessModal = false"
     />
 
-    <!-- 4. 未達標診斷分析彈窗 (安全穩定、條列清晰) -->
+    <!-- 4. 未達標提示彈窗 (不洩漏驗收流程防作弊) -->
     <LevelReviewModal
       v-if="showReviewModal"
       :level="currentLevel"
