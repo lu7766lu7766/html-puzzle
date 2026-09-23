@@ -31,6 +31,7 @@
       <!-- 中間：拖曳工作組裝畫布 -->
       <PuzzleCanvas
         :canvas-nodes="canvasNodes"
+        :current-level="currentLevel"
         @add-root-block="onAddBlockToRoot"
         @remove-node="onRemoveNode"
         @remove-attr="onRemoveAttr"
@@ -48,6 +49,7 @@
         :html-code="currentHtmlCode"
         :target-html="currentLevel.targetHtml"
         :canvas-nodes="canvasNodes"
+        :current-level-id="currentLevelId"
       />
     </div>
 
@@ -84,6 +86,7 @@
       :level="currentLevel"
       :test-report="lastTestReport"
       @close="showReviewModal = false"
+      @open-handbook="onOpenHandbookFromReview"
     />
   </div>
 </template>
@@ -281,6 +284,12 @@ function onSelectLevel(lvlId) {
   playClick();
   showReviewModal.value = false;
   setCurrentLevel(lvlId);
+}
+
+function onOpenHandbookFromReview() {
+  playClick();
+  showReviewModal.value = false;
+  showHandbookModal.value = true;
 }
 
 

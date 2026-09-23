@@ -21,11 +21,39 @@
         <!-- 清空畫布 -->
         <button 
           @click="$emit('clear-canvas')"
-          class="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-300 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-colors shadow-sm"
+          class="px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-300 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-colors shadow-sm cursor-pointer"
         >
           🗑️ 清空畫布
         </button>
       </div>
+    </div>
+
+    <!-- 新手引導橫幅：首次進入容器巢狀關卡提示 -->
+    <div 
+      v-if="isNestingTutorialLevel && showNestingTip"
+      class="mx-3 sm:mx-4 mt-2.5 p-3 rounded-2xl bg-linear-to-r from-indigo-500/10 via-purple-500/10 to-amber-500/10 border border-indigo-400/50 dark:border-indigo-600/50 shadow-sm flex items-start justify-between gap-3 text-xs leading-relaxed shrink-0 animate-in fade-in slide-in-from-top-2 duration-300"
+    >
+      <div class="flex items-start gap-2.5">
+        <span class="text-xl sm:text-2xl shrink-0 mt-0.5">🧩</span>
+        <div class="space-y-1">
+          <div class="font-extrabold text-indigo-900 dark:text-indigo-200 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
+            <span>新手教學：本關解鎖「容器巢狀模式（Container）」！</span>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-300 dark:border-indigo-700">
+              重要心智模型
+            </span>
+          </div>
+          <p class="text-slate-700 dark:text-slate-300 text-xs sm:text-[13px]">
+            網頁結構如同俄羅斯娃娃：請先放入外層根元素（如 <code class="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-bold text-indigo-600 dark:text-indigo-400">&lt;html&gt;</code>），再將子標籤（如 <code class="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-bold text-indigo-600 dark:text-indigo-400">&lt;head&gt;</code>、<code class="font-mono bg-white dark:bg-slate-900 px-1 py-0.5 rounded border border-slate-300 dark:border-slate-700 font-bold text-indigo-600 dark:text-indigo-400">&lt;body&gt;</code>）<strong>直接拖曳放入容器內部的虛線槽位</strong>進行多層包覆！
+          </p>
+        </div>
+      </div>
+      <button 
+        @click="showNestingTip = false" 
+        class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs px-2 py-1 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0 font-bold"
+        title="收起教學引導"
+      >
+        ✕
+      </button>
     </div>
 
     <!-- 畫布主體 -->
@@ -60,11 +88,18 @@
 
         <template v-else>
           <div class="w-14 h-14 rounded-2xl bg-indigo-100 dark:bg-indigo-950/50 border border-indigo-300 dark:border-indigo-800/40 flex items-center justify-center text-2xl mb-3 shadow-inner">
-            🧩
+            {{ isNestingTutorialLevel ? '🏛️' : '🧩' }}
           </div>
-          <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-100 mb-1">工作區已就緒（請開始組裝）</h3>
+          <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-100 mb-1">
+            {{ isNestingTutorialLevel ? '骨架起手式：先建立 DOCTYPE 與 html 根容器' : '工作區已就緒（請開始組裝）' }}
+          </h3>
           <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md mb-4 leading-relaxed font-medium">
-            請從左側「<span class="text-indigo-600 dark:text-indigo-400 font-bold">積木工具箱</span>」點選或拖曳標籤積木進來，親手拼出網頁結構！
+            <template v-if="isNestingTutorialLevel">
+              第 1 步先加入 <span class="font-mono font-bold text-amber-600 dark:text-amber-400">&lt;!DOCTYPE html&gt;</span>，第 2 步加入 <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">&lt;html&gt;</span> 容器，再把 head 與 body 放進 html 容器內部！
+            </template>
+            <template v-else>
+              請從左側「<span class="text-indigo-600 dark:text-indigo-400 font-bold">積木工具箱</span>」點選或拖曳標籤積木進來，親手拼出網頁結構！
+            </template>
           </p>
           <div class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-sm">
             <span>👈</span>
@@ -123,12 +158,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import PuzzleNode from './PuzzleNode.vue';
 import { usePuzzleEngine } from '../../composables/usePuzzleEngine';
 
 const props = defineProps({
-  canvasNodes: { type: Array, required: true }
+  canvasNodes: { type: Array, required: true },
+  currentLevel: { type: Object, default: () => ({}) }
+});
+
+const isNestingTutorialLevel = computed(() => props.currentLevel?.id === 'stage-3');
+const showNestingTip = ref(true);
+
+watch(() => props.currentLevel?.id, () => {
+  showNestingTip.value = true;
 });
 
 const emit = defineEmits([

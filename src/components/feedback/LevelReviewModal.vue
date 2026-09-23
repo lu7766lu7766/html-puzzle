@@ -49,7 +49,15 @@
       </div>
 
       <!-- 底部按鈕 -->
-      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 w-full flex justify-center">
+      <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 w-full flex flex-col sm:flex-row items-center justify-center gap-2.5">
+        <button 
+          @click="handleOpenHandbook"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/70 dark:hover:bg-amber-900/80 border border-amber-300 dark:border-amber-700/80 text-amber-900 dark:text-amber-200 font-bold text-xs sm:text-sm transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+        >
+          <span>📖</span>
+          <span>查閱避坑教學手冊</span>
+        </button>
+
         <button 
           @click="handleClose"
           class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
@@ -70,7 +78,7 @@ const props = defineProps({
   testReport: { type: Object, default: () => ({}) }
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'open-handbook']);
 
 // 防誤觸機制：開啟的前 200ms 不觸發 Esc 或快捷關閉
 const canClose = ref(false);
@@ -78,6 +86,11 @@ const canClose = ref(false);
 function handleClose() {
   if (!canClose.value) return;
   emit('close');
+}
+
+function handleOpenHandbook() {
+  if (!canClose.value) return;
+  emit('open-handbook');
 }
 
 function handleKeyDown(e) {
