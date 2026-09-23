@@ -28,8 +28,24 @@
           驗收尚未達標，還差一點點！
         </h3>
         <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2.5 font-medium max-w-sm leading-relaxed">
-          目前網頁架構或語法尚未完全正確，請再仔細檢查畫布中的積木配置與屬性設定，調整後再次提交！
+          目前網頁架構或語法順序尚未完全正確，請再仔細檢查畫布中的積木配置與順序後再次提交！
         </p>
+
+        <!-- 待調整原因清單 -->
+        <div 
+          v-if="testReport?.errorDetails && testReport.errorDetails.length > 0"
+          class="mt-3.5 w-full bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-3.5 text-left max-h-48 overflow-y-auto"
+        >
+          <div class="text-xs font-bold text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1.5">
+            <span>⚠️</span>
+            <span>待調整項目與順序：</span>
+          </div>
+          <ul class="text-xs text-amber-900 dark:text-amber-200/90 space-y-1 font-medium list-disc list-inside">
+            <li v-for="(err, idx) in testReport.errorDetails" :key="idx" class="leading-relaxed">
+              {{ err }}
+            </li>
+          </ul>
+        </div>
       </div>
 
       <!-- 底部按鈕 -->

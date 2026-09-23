@@ -178,7 +178,7 @@ function updateChecklist() {
 }
 
 // 監聽畫布積木變動，即時更新目標檢驗
-watch([currentHtmlCode, currentLevel], () => {
+watch([currentHtmlCode, currentLevel, canvasNodes], () => {
   updateChecklist();
 }, { deep: true });
 

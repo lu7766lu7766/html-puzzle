@@ -258,6 +258,7 @@ export function usePuzzleEngine() {
       return false;
     }
     searchAndSetAttr(canvasNodes.value);
+    canvasNodes.value = [...canvasNodes.value];
   }
 
   // 移除節點特定屬性
@@ -275,6 +276,7 @@ export function usePuzzleEngine() {
       return false;
     }
     searchAndDelAttr(canvasNodes.value);
+    canvasNodes.value = [...canvasNodes.value];
   }
 
   // 更新節點特定屬性（支援鍵名修改與值修改）

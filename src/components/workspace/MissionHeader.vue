@@ -112,13 +112,22 @@ const allChecklistPassed = computed(() => totalCount.value > 0 && passedCount.va
 
 // 判定是否達成目標
 const isGoalAchieved = computed(() => {
-  return allChecklistPassed.value || (props.currentBlockCount >= requiredBlocks.value && totalCount.value === 0)
+  if (totalCount.value > 0) {
+    return allChecklistPassed.value && props.currentBlockCount >= requiredBlocks.value
+  }
+  return props.currentBlockCount >= requiredBlocks.value
 })
 
-// 目標達成度進度百分比 (以實際已放積木數 / 需求積木數為準，全部通過時直接 100%)
+// 目標達成度進度百分比 (以實際已放積木數與目標清單通過數為準，全數通過時 100%)
 const progressPercent = computed(() => {
   if (allChecklistPassed.value && props.currentBlockCount >= requiredBlocks.value) return 100
   if (requiredBlocks.value === 0) return 0
+  if (totalCount.value > 0) {
+    const blockRatio = Math.min(1, props.currentBlockCount / requiredBlocks.value)
+    const checkRatio = passedCount.value / totalCount.value
+    const combined = (blockRatio * 0.5 + checkRatio * 0.5) * 100
+    return Math.min(allChecklistPassed.value ? 100 : 85, Math.round(combined))
+  }
   const ratio = (props.currentBlockCount / requiredBlocks.value) * 100
   return Math.min(100, Math.round(ratio))
 })
