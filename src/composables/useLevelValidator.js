@@ -18,9 +18,9 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       if (nodes.length !== 3) {
         result.valid = false;
         if (nodes.length < 3) {
-          result.errors.push('積木數量不足：請放置完整的 <p> 起始標籤、文字內容與 </p> 結束標籤！');
+          result.errors.push('積木數量不足：請放置完整的起始標籤、文字內容與結束標籤！');
         } else {
-          result.errors.push('畫布上有額外或干擾積木（例如 <span> 標籤），請將其移除！');
+          result.errors.push('畫布上有非必要的干擾積木，請檢查並移除多餘項目！');
         }
         return result;
       }
@@ -30,7 +30,7 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
 
       if (!isFirstPOpen || !isSecondText || !isThirdPClose) {
         result.valid = false;
-        result.errors.push('積木順序錯誤：必須先放 <p> 起始標籤，中間放公告文字內容，最後以 </p> 結束標籤閉合！');
+        result.errors.push('積木排列順序有誤：請檢查標籤的開始、內容與結束閉合順序！');
       } else {
         result.logs.push('✅ 積木順序檢核完全正確：<p> ➔ 公告文字 ➔ </p>');
       }
@@ -42,9 +42,9 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       if (nodes.length !== 5) {
         result.valid = false;
         if (nodes.length < 5) {
-          result.errors.push('積木數量不足：請放齊 <div>、活動時間文字、<br /> 標籤、活動地點文字與 </div> 標籤！');
+          result.errors.push('積木數量不足：請確認外層容器、兩行文字與換行標籤是否皆已放置！');
         } else {
-          result.errors.push('畫布上有額外積木，請移除多餘積木！');
+          result.errors.push('畫布上有非必要積木，請檢查並移除多餘項目！');
         }
         return result;
       }
@@ -56,7 +56,7 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
 
       if (!n0 || !n1 || !n2 || !n3 || !n4) {
         result.valid = false;
-        result.errors.push('積木順序錯誤：請依序排列 <div> 容器開頭、第一行活動時間、<br /> 換行標籤、第二行活動地點，最後以 </div> 閉合！');
+        result.errors.push('積木順序有誤：文字與換行標籤的先後位置尚未正確，請對照成果重新檢視！');
       } else {
         result.logs.push('✅ 積木順序檢核完全正確：<div> ➔ 時間 ➔ <br /> ➔ 地點 ➔ </div>');
       }
@@ -67,23 +67,23 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       // 頂層必須僅有：<!DOCTYPE html> (void_tag) -> <html> (container)
       if (nodes.length !== 2) {
         result.valid = false;
-        result.errors.push('頂層結構錯誤：畫布根節點應僅有 <!DOCTYPE html> 與 <html> 兩大積木（其餘積木請依層級嵌套置於 <html> 內部）！');
+        result.errors.push('頂層架構有誤：最外層應僅保留宣告與根容器，子元素請依層級嵌套放入內部！');
         return result;
       }
       if (nodes[0].tag !== '!DOCTYPE html') {
         result.valid = false;
-        result.errors.push('首行宣告錯誤：<!DOCTYPE html> 宣告必須置於最頂部第一行！');
+        result.errors.push('頂層宣告位置有誤：請確認文檔型態宣告是否置於最頂部！');
         return result;
       }
       if (nodes[1].tag !== 'html') {
         result.valid = false;
-        result.errors.push('根標籤錯誤：第二項必須為 <html> 根容器標籤！');
+        result.errors.push('根容器位置有誤：請確認根標籤是否包覆其餘所有網頁內容！');
         return result;
       }
       const htmlChildren = nodes[1].children || [];
       if (htmlChildren.length !== 2) {
         result.valid = false;
-        result.errors.push('<html> 內部結構錯誤：<html> 內部應依序包含 <head> 與 <body> 兩個子容器！');
+        result.errors.push('根容器內部結構有誤：請確認資訊容器（head）與主體內容容器（body）之配置！');
         return result;
       }
       const headNode = htmlChildren[0];
@@ -91,12 +91,12 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
 
       if (headNode.tag !== 'head') {
         result.valid = false;
-        result.errors.push('結構順序錯誤：<html> 內部第一項必須是 <head> 容器（不可將 <body> 放於 <head> 之前）！');
+        result.errors.push('結構順序錯誤：請確認看不見的資訊容器（head）與看得見的內容容器（body）之先後順序！');
         return result;
       }
       if (bodyNode.tag !== 'body') {
         result.valid = false;
-        result.errors.push('結構順序錯誤：<html> 內部第二項必須是 <body> 容器！');
+        result.errors.push('結構順序錯誤：內容主體容器（body）位置不正確，請重新調整！');
         return result;
       }
 
@@ -105,7 +105,7 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const titleNode = headChildren.find(c => c.tag === 'title');
       if (!titleNode || !titleNode.text?.includes('校園資訊網')) {
         result.valid = false;
-        result.errors.push('<head> 內容錯誤：<head> 容器內必須放置包含「校園資訊網」的 <title> 標籤！');
+        result.errors.push('標頭容器內容未齊全：請確認分頁標題元素是否正確置於 head 內部！');
         return result;
       }
 
@@ -113,12 +113,12 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const bodyChildren = bodyNode.children || [];
       if (bodyChildren.length !== 2) {
         result.valid = false;
-        result.errors.push('<body> 內容錯誤：<body> 內部應依序包含 <h1> 大標題與 <p> 內文！');
+        result.errors.push('內容主體結構未完備：body 內部應包含大標題與內文段落！');
         return result;
       }
       if (bodyChildren[0].tag !== 'h1' || bodyChildren[1].tag !== 'p') {
         result.valid = false;
-        result.errors.push('<body> 內部順序錯誤：<body> 內部順序必須為 <h1> 標題在先，<p> 段落在後！');
+        result.errors.push('主體內容順序有誤：請對照成果確認標題與段落的由上而下排列順序！');
         return result;
       }
       result.logs.push('✅ 標準網頁骨架結構與順序檢核完全正確！');
@@ -129,19 +129,19 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       // 頂層必須僅有：<header> -> <main> -> <footer>
       if (nodes.length !== 3) {
         result.valid = false;
-        result.errors.push('版面語意結構錯誤：根節點應依序僅有 <header>、<main>、<footer> 三大區域（其餘標籤應放入對應容器）！');
+        result.errors.push('頁面語意架構有誤：最外層應為頂部、主體與頁尾三大區域，其餘標籤應放入對應區域！');
         return result;
       }
       if (nodes[0].tag !== 'header' || nodes[1].tag !== 'main' || nodes[2].tag !== 'footer') {
         result.valid = false;
-        result.errors.push('版面順序錯誤：頁面語意結構應依序為頂部 <header>、核心主體 <main>、底部 <footer>！');
+        result.errors.push('語意分區順序有誤：請依照網頁閱讀邏輯檢查頂部、主體與底部區域的先後順序！');
         return result;
       }
       // header: nav
       const headerChildren = nodes[0].children || [];
       if (!headerChildren.some(c => c.tag === 'nav')) {
         result.valid = false;
-        result.errors.push('<header> 結構錯誤：<nav> 導覽列必須置於 <header> 內部！');
+        result.errors.push('頂部區塊結構未完備：導覽列元素應置於頂部語意容器內部！');
         return result;
       }
       // main: article -> h2, p
@@ -149,13 +149,13 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const artNode = mainChildren.find(c => c.tag === 'article');
       if (!artNode) {
         result.valid = false;
-        result.errors.push('<main> 結構錯誤：<article> 獨立文章必須置於 <main> 內部！');
+        result.errors.push('主體區塊結構未完備：獨立文章元素應置於核心主體容器內部！');
         return result;
       }
       const artChildren = artNode.children || [];
       if (artChildren.length !== 2 || artChildren[0].tag !== 'h2' || artChildren[1].tag !== 'p') {
         result.valid = false;
-        result.errors.push('<article> 順序錯誤：<article> 內部順序應為 <h2> 標題在先，<p> 內文在後！');
+        result.errors.push('文章內部順序有誤：請確認副標題與內文段落的先後關係！');
         return result;
       }
       result.logs.push('✅ 語意化排版結構與順序檢核完全正確！');
@@ -165,28 +165,19 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
     case 'stage-5': {
       if (nodes.length !== 1 || nodes[0].tag !== 'button') {
         result.valid = false;
-        result.errors.push('結構錯誤：畫布上應只有一個 <button> 按鈕，請將四大屬性晶片直接掛載於該按鈕上！');
+        result.errors.push('元件結構有誤：畫布上應僅保留目標按鈕，並將屬性晶片直接掛載於該按鈕！');
         return result;
       }
       const attrs = nodes[0].attrs || {};
-      if (attrs.id !== 'like-btn') {
+      const missingAttrs = [];
+      if (attrs.id !== 'like-btn') missingAttrs.push('身分識別');
+      if (attrs.class !== 'btn-primary') missingAttrs.push('樣式類別');
+      if (!attrs.style || !attrs.style.includes('color')) missingAttrs.push('行內樣式');
+      if (!attrs.onclick || !attrs.onclick.includes('alert(')) missingAttrs.push('互動事件');
+
+      if (missingAttrs.length > 0) {
         result.valid = false;
-        result.errors.push('屬性缺失：按鈕缺少 id="like-btn" 屬性！');
-        return result;
-      }
-      if (attrs.class !== 'btn-primary') {
-        result.valid = false;
-        result.errors.push('屬性缺失：按鈕缺少 class="btn-primary" 屬性！');
-        return result;
-      }
-      if (!attrs.style || !attrs.style.includes('color')) {
-        result.valid = false;
-        result.errors.push('屬性缺失：按鈕缺少 style 行內樣式屬性！');
-        return result;
-      }
-      if (!attrs.onclick || !attrs.onclick.includes('alert(')) {
-        result.valid = false;
-        result.errors.push('屬性缺失：按鈕缺少 onclick 點擊互動事件屬性！');
+        result.errors.push(`屬性掛載未齊全：按鈕尚有必要屬性尚未正確掛載（例如：${missingAttrs.join('、')}），請檢視任務需求！`);
         return result;
       }
       result.logs.push('✅ 四大核心屬性晶片掛載檢核完全正確！');
@@ -197,30 +188,30 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       // 頂層必須僅有：<h1> -> <ul> -> <img>
       if (nodes.length !== 3) {
         result.valid = false;
-        result.errors.push('名片結構錯誤：畫布根節點應依序為 <h1> 標題、<ul> 清單與 <img> 圖片（清單項目 <li> 請放入 <ul> 容器內）！');
+        result.errors.push('名片結構有誤：最外層應依序保留大標題、清單與圖片，清單項目請放入清單容器內部！');
         return result;
       }
       if (nodes[0].tag !== 'h1' || nodes[1].tag !== 'ul' || nodes[2].tag !== 'img') {
         result.valid = false;
-        result.errors.push('積木順序錯誤：頂部應為 <h1> 大標題，中間為 <ul> 清單，底部為 <img> 圖片！');
+        result.errors.push('元件順序有誤：請對照成果預覽由上而下調整標題、清單與圖片的順序！');
         return result;
       }
       const ulChildren = nodes[1].children || [];
       if (ulChildren.length !== 2) {
         result.valid = false;
-        result.errors.push('清單結構錯誤：<ul> 內部必須依序放入兩項 <li> 清單項目！');
+        result.errors.push('清單結構未完備：清單容器內部應放入兩項清單項目！');
         return result;
       }
       const isLi1 = ulChildren[0].tag === 'li' && ulChildren[0].text?.includes('專業');
       const isLi2 = ulChildren[1].tag === 'li' && ulChildren[1].text?.includes('徽章');
       if (!isLi1 || !isLi2) {
         result.valid = false;
-        result.errors.push('清單順序錯誤：<ul> 內部請依序排列「專業」項目與「徽章」項目！');
+        result.errors.push('清單項目順序有誤：請檢查清單內部各項目的先後順序！');
         return result;
       }
       if (!nodes[2].attrs?.src || !nodes[2].attrs?.alt) {
         result.valid = false;
-        result.errors.push('圖片屬性錯誤：<img> 必須具備 src 與 alt 屬性！');
+        result.errors.push('圖片標籤屬性未完備：請確認圖片載入來源與替代文字等必備屬性！');
         return result;
       }
       result.logs.push('✅ 個人多媒體檔案結構與順序檢核完全正確！');
@@ -231,39 +222,30 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       // 頂層必須僅有：<input type="text"> -> <label> 上午 -> <label> 下午
       if (nodes.length !== 3) {
         result.valid = false;
-        result.errors.push('表單結構錯誤：根節點應依序為學號輸入框、上午時段選項、下午時段選項（單選鈕請放入對應 <label> 內）！');
+        result.errors.push('表單結構有誤：最外層應為輸入框與時段選項，單選鈕請放入對應標籤內！');
         return result;
       }
       if (nodes[0].tag !== 'input' || nodes[0].attrs?.type !== 'text') {
         result.valid = false;
-        result.errors.push('表單順序錯誤：表單頂部第一項應為學號輸入框 <input type="text">！');
+        result.errors.push('表單順序有誤：表單頂部首項應為文字輸入框！');
         return result;
       }
-      if (nodes[1].tag !== 'label' || !nodes[1].text?.includes('上午')) {
+      if (nodes[1].tag !== 'label' || !nodes[1].text?.includes('上午') ||
+          nodes[2].tag !== 'label' || !nodes[2].text?.includes('下午')) {
         result.valid = false;
-        result.errors.push('表單順序錯誤：輸入框下方應為上午時段 <label>！');
-        return result;
-      }
-      if (nodes[2].tag !== 'label' || !nodes[2].text?.includes('下午')) {
-        result.valid = false;
-        result.errors.push('表單順序錯誤：上午時段下方應為下午時段 <label>！');
+        result.errors.push('表單時段順序有誤：請依照日常時間順序調整時段選項！');
         return result;
       }
       const r1 = (nodes[1].children || []).find(c => c.tag === 'input' && c.attrs?.type === 'radio');
       const r2 = (nodes[2].children || []).find(c => c.tag === 'input' && c.attrs?.type === 'radio');
-      if (!r1) {
+      if (!r1 || !r2) {
         result.valid = false;
-        result.errors.push('巢狀包裹錯誤：上午時段 <label> 內部必須包裹 morning 單選鈕！');
-        return result;
-      }
-      if (!r2) {
-        result.valid = false;
-        result.errors.push('巢狀包裹錯誤：下午時段 <label> 內部必須包裹 afternoon 單選鈕！');
+        result.errors.push('選項標籤未包裹：時段標籤內部必須各自包覆對應的單選按鈕！');
         return result;
       }
       if (!r1.attrs?.name || r1.attrs?.name !== r2.attrs?.name) {
         result.valid = false;
-        result.errors.push('單選互斥錯誤：兩個 radio 單選鈕的 name 屬性必須完全相同！');
+        result.errors.push('單選互斥設定未完成：請檢查各單選按鈕的群組屬性設定是否一致！');
         return result;
       }
       result.logs.push('✅ 選修表單控制項結構與順序檢核完全正確！');
@@ -273,19 +255,19 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
     case 'boss-1': {
       if (nodes.length !== 1 || nodes[0].tag !== 'a') {
         result.valid = false;
-        result.errors.push('超連結傳送門結構錯誤：頂層應為 <a> 標籤，並將 <img> 圖片放置於其內部！');
+        result.errors.push('超連結傳送門結構有誤：頂層應為超連結標籤，並將圖片放置於其內部！');
         return result;
       }
       const aChildren = nodes[0].children || [];
       const hasImg = aChildren.some(c => c.tag === 'img');
       if (!hasImg) {
         result.valid = false;
-        result.errors.push('巢狀包覆錯誤：<img> 圖片必須置於 <a> 超連結容器內部！');
+        result.errors.push('標籤巢狀包覆未完成：圖片必須置於超連結容器內部！');
         return result;
       }
       if (!nodes[0].attrs?.href?.includes('https://www.google.com')) {
         result.valid = false;
-        result.errors.push('超連結網址錯誤：<a> 的 href 必須指向 https://www.google.com！');
+        result.errors.push('超連結目標設定有誤：請檢查超連結的目標網址屬性！');
         return result;
       }
       result.logs.push('✅ 圖片超連結傳送門巢狀結構檢核完全正確！');
@@ -295,38 +277,30 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
     case 'boss-2': {
       if (nodes.length !== 5) {
         result.valid = false;
-        result.errors.push('表單結構錯誤：根節點應依序為：1. 姓名區塊 2. 早上選項 3. 中午選項 4. 晚上選項 5. 送出按鈕！其餘輸入框與單選鈕請放入對應容器中！');
+        result.errors.push('綜合表單結構有誤：最外層應依序包含姓名區塊、三個時段選項與送出按鈕！');
         return result;
       }
       if (nodes[0].tag !== 'div' || !nodes[0].text?.includes('尊姓大名')) {
         result.valid = false;
-        result.errors.push('表單順序錯誤：第一項必須為「尊姓大名」姓名區塊 <div>！');
+        result.errors.push('表單順序有誤：首項應為姓名輸入區塊！');
         return result;
       }
       const nameInp = (nodes[0].children || []).find(c => c.tag === 'input');
       if (!nameInp || nameInp.attrs?.placeholder !== '王XX') {
         result.valid = false;
-        result.errors.push('姓名區塊錯誤：姓名區塊 <div> 內部必須包含含 placeholder="王XX" 的輸入框！');
+        result.errors.push('姓名區塊設定未完備：輸入框缺少提示屬性或未正確放入姓名區塊內！');
         return result;
       }
-      if (nodes[1].tag !== 'label' || !nodes[1].text?.includes('早上')) {
+      if (nodes[1].tag !== 'label' || !nodes[1].text?.includes('早上') ||
+          nodes[2].tag !== 'label' || !nodes[2].text?.includes('中午') ||
+          nodes[3].tag !== 'label' || !nodes[3].text?.includes('晚上')) {
         result.valid = false;
-        result.errors.push('表單順序錯誤：第二項必須為「早上」時段 <label>！');
-        return result;
-      }
-      if (nodes[2].tag !== 'label' || !nodes[2].text?.includes('中午')) {
-        result.valid = false;
-        result.errors.push('表單順序錯誤：第三項必須為「中午」時段 <label>！');
-        return result;
-      }
-      if (nodes[3].tag !== 'label' || !nodes[3].text?.includes('晚上')) {
-        result.valid = false;
-        result.errors.push('表單順序錯誤：第四項必須為「晚上」時段 <label>！');
+        result.errors.push('時段選項順序有誤：請依照日常時間先後排列早、中、晚時段！');
         return result;
       }
       if (nodes[4].tag !== 'button' || !nodes[4].text?.includes('送出')) {
         result.valid = false;
-        result.errors.push('表單順序錯誤：最後一項必須為「送出」<button> 按鈕！');
+        result.errors.push('表單結尾有誤：表單末端應為送出按鈕！');
         return result;
       }
       const r1 = (nodes[1].children || []).find(c => c.tag === 'input' && c.attrs?.value === 'morning');
@@ -334,12 +308,12 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const r3 = (nodes[3].children || []).find(c => c.tag === 'input' && c.attrs?.value === 'evening');
       if (!r1 || !r2 || !r3) {
         result.valid = false;
-        result.errors.push('單選鈕包覆錯誤：早、中、晚三個 <label> 內必須各自包裹對應時段的 radio 單選鈕！');
+        result.errors.push('時段選項標籤未包裹：各時段標籤內必須各自包覆對應時段的單選按鈕！');
         return result;
       }
       if (!r1.attrs?.name || r1.attrs?.name !== r2.attrs?.name || r2.attrs?.name !== r3.attrs?.name) {
         result.valid = false;
-        result.errors.push('單選互斥錯誤：早、中、晚三個 radio 的 name 屬性必須完全相同！');
+        result.errors.push('單選互斥設定未完成：三個單選鈕的群組屬性設定必須完全一致！');
         return result;
       }
       result.logs.push('✅ 課堂綜合表單結構與順序檢核完全正確！');
@@ -354,7 +328,7 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
 
       if (!hasTest || !hasStrike || !hasRed || !hasSize) {
         result.valid = false;
-        result.errors.push('樣式要求未達標：文字必須為「test」，且同時具備刪除線、紅色 (red) 與 32px 大小！');
+        result.errors.push('文字外觀樣式未達標：請確認文字內容及刪除線、色彩與字級等外觀樣式設定！');
         return result;
       }
       result.logs.push('✅ 文字刪除線與現代樣式檢核完全正確！');
@@ -607,11 +581,9 @@ export function useLevelValidator() {
       errorDetails: []
     };
 
-    // 1. 檢核目標清單
+    // 1. 檢核目標清單日誌
     checks.forEach(c => {
-      if (!checklistStatus[c.id]) {
-        report.errorDetails.push(`未完成目標：${c.label}`);
-      } else {
+      if (checklistStatus[c.id]) {
         report.logs.push(`目標達成：${c.label}`);
       }
     });
@@ -621,7 +593,8 @@ export function useLevelValidator() {
     if (!structureResult.valid) {
       report.passed = false;
       report.stars = 1;
-      report.errorDetails.push(...structureResult.errors);
+      // 僅提供非洩題的啟發式除錯指引，並去除重複項目
+      report.errorDetails = [...new Set(structureResult.errors)];
       return report;
     } else {
       report.logs.push(...structureResult.logs);
@@ -631,6 +604,7 @@ export function useLevelValidator() {
     if (totalGoals > 0 && passedGoals !== totalGoals) {
       report.passed = false;
       report.stars = passedGoals >= Math.ceil(totalGoals / 2) ? 2 : 1;
+      report.errorDetails.push(`尚有部分任務條件未完全達標（已達成 ${passedGoals} / ${totalGoals} 項），請對照成果畫面檢查積木配置！`);
       return report;
     }
 
@@ -649,7 +623,7 @@ export function useLevelValidator() {
             report.logs.push(`⚡ 瀏覽器人機測試：所有 Radio 皆設定相同 name="${firstRadioName}"，單選互斥性驗證成功！`);
           } else {
             report.passed = false;
-            report.errorDetails.push('❌ Radio 按鈕 name 屬性不一致，無法達成單選互斥！');
+            report.errorDetails.push('單選互斥效果尚未完成：請檢查各選項的群組屬性設定！');
             return report;
           }
         }
@@ -663,7 +637,7 @@ export function useLevelValidator() {
           report.logs.push('⚡ 瀏覽器人機測試：<a> 成功包覆 <img>，整張圖片點擊熱區擴展完成！');
         } else {
           report.passed = false;
-          report.errorDetails.push('❌ 圖片未被包裹在 <a> 容器內！');
+          report.errorDetails.push('標籤巢狀包覆未完成：請確認圖片是否置於超連結容器內！');
           return report;
         }
       }

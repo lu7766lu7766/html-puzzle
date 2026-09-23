@@ -344,7 +344,7 @@ export const PUZZLE_LEVELS = [
     moduleTitle: "Practice 02: 課堂實戰練習 (二)",
     badge: "極致表單達人",
     scenario: "【課堂實戰二】：寫出一張表單：1. 標題『尊姓大名』文字輸入框，空白時以灰色呈現『王XX』；2. Radio 單選選擇器（選項：早上、中午、晚上）；3. 最後附一個『送出』按鈕。",
-    hint: '1. placeholder 提供反灰預設提示\n2. 三個 radio 的 name="time" 必須完全一致達到互斥\n3. <label> 包覆提升體驗\n4. 送出按鈕 <button>送出</button>！',
+    hint: "綜合表單心法：輸入框提供預設提示、多個單選鈕透過相同 name 群組達成互斥、使用 label 包覆提升點擊體驗，最後加上送出按鈕！",
     defaultMode: "container",
     requiredBlocksCount: 9,
     learningGoal: "綜合應用 placeholder、radio 單選互斥 name、label 綁定與按鈕元件。",
