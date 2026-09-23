@@ -267,7 +267,7 @@ export const PUZZLE_LEVELS = [
         id: "b_rad_1", 
         type: "void_tag", 
         tag: "input", 
-        label: '<input type="radio" name="shift" />',
+        label: '<input type="radio" name="shift" value="morning" />',
         attrs: { type: "radio", name: "shift", value: "morning" }
       },
       { 
@@ -282,7 +282,7 @@ export const PUZZLE_LEVELS = [
         id: "b_rad_2", 
         type: "void_tag", 
         tag: "input", 
-        label: '<input type="radio" name="shift" />',
+        label: '<input type="radio" name="shift" value="afternoon" />',
         attrs: { type: "radio", name: "shift", value: "afternoon" }
       }
     ],
@@ -394,7 +394,7 @@ export const PUZZLE_LEVELS = [
         id: "b_f_inp_r1", 
         type: "void_tag", 
         tag: "input", 
-        label: '<input type="radio" name="time" />',
+        label: '<input type="radio" name="time" value="morning" />',
         attrs: { type: "radio", name: "time", value: "morning" } 
       },
       { 
@@ -409,7 +409,7 @@ export const PUZZLE_LEVELS = [
         id: "b_f_inp_r2", 
         type: "void_tag", 
         tag: "input", 
-        label: '<input type="radio" name="time" />',
+        label: '<input type="radio" name="time" value="noon" />',
         attrs: { type: "radio", name: "time", value: "noon" } 
       },
       { 
@@ -424,7 +424,7 @@ export const PUZZLE_LEVELS = [
         id: "b_f_inp_r3", 
         type: "void_tag", 
         tag: "input", 
-        label: '<input type="radio" name="time" />',
+        label: '<input type="radio" name="time" value="evening" />',
         attrs: { type: "radio", name: "time", value: "evening" } 
       },
       { 

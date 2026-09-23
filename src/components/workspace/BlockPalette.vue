@@ -58,11 +58,11 @@
             <!-- 卡榫左側視覺裝飾線 -->
             <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="getBlockColorBar(block)"></div>
 
-            <div class="flex items-center justify-between pl-1.5">
-              <span class="font-mono text-sm font-extrabold tracking-tight" :class="getBlockTextColor(block)">
+            <div class="flex items-start justify-between gap-2 pl-1.5">
+              <span class="font-mono text-xs sm:text-sm font-extrabold tracking-tight break-all leading-snug" :class="getBlockTextColor(block)">
                 {{ block.label }}
               </span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-800">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-slate-800 shrink-0">
                 {{ getBlockBadge(block) }}
               </span>
             </div>
