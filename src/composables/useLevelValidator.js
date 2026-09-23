@@ -56,7 +56,11 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
 
       if (!n0 || !n1 || !n2 || !n3 || !n4) {
         result.valid = false;
-        result.errors.push('積木順序有誤：文字與換行標籤的先後位置尚未正確，請對照成果重新檢視！');
+        if (!n0 || !n4) {
+          result.errors.push('容器結構有誤：請使用 <div> 容器將兩行文字與換行元素完整包覆！');
+        } else {
+          result.errors.push('積木順序有誤：文字與換行標籤的先後位置尚未正確，請對照成果重新檢視！');
+        }
       } else {
         result.logs.push('✅ 積木順序檢核完全正確：<div> ➔ 時間 ➔ <br /> ➔ 地點 ➔ </div>');
       }
