@@ -501,7 +501,8 @@ export function useLevelValidator() {
         const hasHrefGoogle = typeof aNode?.attrs?.href === 'string' && aNode.attrs.href.includes('https://www.google.com');
 
         results['chk_nest_a_img'] = hasImgInA;
-        results['chk_href_google'] = hasHrefGoogle && isCleanRoot;
+        results['chk_href_google'] = hasHrefGoogle;
+        results['chk_img_clickable'] = hasImgInA && hasHrefGoogle && isCleanRoot;
         break;
       }
 
