@@ -145,7 +145,7 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const headerChildren = nodes[0].children || [];
       if (!headerChildren.some(c => c.tag === 'nav')) {
         result.valid = false;
-        result.errors.push('頂部區塊結構未完備：導覽列元素應置於頂部語意容器內部！');
+        result.errors.push('頂部區塊結構未完備：<nav> 導覽列應置於頂部 <header> 容器內部！');
         return result;
       }
       // main: article -> h2, p
@@ -153,13 +153,13 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
       const artNode = mainChildren.find(c => c.tag === 'article');
       if (!artNode) {
         result.valid = false;
-        result.errors.push('主體區塊結構未完備：獨立文章元素應置於核心主體容器內部！');
+        result.errors.push('主體區塊結構未完備：專題文章 <article> 應置於核心主體 <main> 容器內部！');
         return result;
       }
       const artChildren = artNode.children || [];
       if (artChildren.length !== 2 || artChildren[0].tag !== 'h2' || artChildren[1].tag !== 'p') {
         result.valid = false;
-        result.errors.push('文章內部順序有誤：請確認副標題與內文段落的先後關係！');
+        result.errors.push('文章內部結構或順序有誤：<article> 內部應依序放入 <h2> 標題與 <p> 內文！');
         return result;
       }
       result.logs.push('✅ 語意化排版結構與順序檢核完全正確！');

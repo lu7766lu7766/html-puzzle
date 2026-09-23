@@ -117,12 +117,12 @@ export const PUZZLE_LEVELS = [
     title: "第四關：校刊專題語意化排版",
     moduleTitle: "Module 04: 現代語意化標籤",
     badge: "語意守護者",
-    scenario: "校刊社的排版全充斥著無意義的 <div>，螢幕閱讀器與搜尋引擎完全迷失方向！請使用現代語意化標籤重塑清晰結構。",
-    hint: "<header> 表頭、<nav> 導覽列、<main> 核心主體、<article> 獨立文章、<footer> 頁尾版權。",
+    scenario: "校刊社專題排版充斥著無意義的 <div>！請使用語意化標籤重塑清晰結構：在頂部 <header> 中放入 <nav> 導覽列，在核心主體 <main> 中放入專題文章 <article>（包含副標題與內文），最後在頁尾以 <footer> 宣告版權。",
+    hint: "語意排版三大分區與巢狀心法：\n1. 頂部：<header> 容器內部放入 <nav> 導覽列\n2. 主體：<main> 核心主體容器內部放入 <article> 獨立文章，<article> 內部再放入 <h2> 標題與 <p> 內文\n3. 頁尾：<footer> 置於最底部宣告版權聲明！",
     defaultMode: "container",
     requiredBlocksCount: 7,
-    learningGoal: "告別 div 地獄，正確運用 header, nav, main, article, footer 佈局。",
-    targetDescription: "語意化版面：表頭 header 包含導覽 nav，主體 main 包含文章 article，底部配置 footer 版權聲明。",
+    learningGoal: "告別 div 地獄，掌握 header 包覆 nav、main 包覆 article，以及 footer 佈局的標準語意化結構。",
+    targetDescription: "語意化版面：表頭 <header> 包含導覽 <nav>，主體 <main> 包含文章 <article>（含 h2 與 p），底部配置 <footer> 版權聲明。",
     targetHtml: `<header>
   <nav>首頁 | 最新專題 | 關於我們</nav>
 </header>
