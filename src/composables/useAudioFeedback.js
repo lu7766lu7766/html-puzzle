@@ -121,12 +121,37 @@ export function useAudioFeedback() {
     } catch (e) {}
   }
 
+  // 5. 警示 / 錯誤提示音 (Warning)
+  function playWarning() {
+    if (isMuted.value) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(260, ctx.currentTime);
+      osc.frequency.setValueAtTime(190, ctx.currentTime + 0.08);
+
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.16);
+    } catch (e) {}
+  }
+
   return {
     isMuted,
     toggleMute,
     playSnap,
     playCheck,
     playSuccess,
-    playClick
+    playClick,
+    playWarning
   };
 }

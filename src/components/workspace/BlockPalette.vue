@@ -165,7 +165,15 @@ function shuffleArray(arr) {
 }
 
 function reshuffle() {
-  shuffledBlocks.value = shuffleArray(props.level.initialBlocks || []);
+  const blocks = props.level.initialBlocks || [];
+  if (props.level?.id === 'stage-5') {
+    // 第五關特別體驗優化：主元件標籤 (<button>) 置頂，其餘四大屬性晶片隨機打亂
+    const tagBlocks = blocks.filter(b => b.type !== 'attr');
+    const attrBlocks = blocks.filter(b => b.type === 'attr');
+    shuffledBlocks.value = [...tagBlocks, ...shuffleArray(attrBlocks)];
+  } else {
+    shuffledBlocks.value = shuffleArray(blocks);
+  }
 }
 
 // 關卡切換或載入時自動打亂推薦零件

@@ -2,7 +2,7 @@
   <div class="relative group my-1.5 transition-all">
     <!-- 頂部插入導引區 (Drop Before) -->
     <div 
-      v-if="draggingBlock && !isSelfBeingDragged"
+      v-if="draggingBlock && !isSelfBeingDragged && draggingBlock.type !== 'attr'"
       class="transition-all duration-150 relative z-30"
       :class="[
         dropPos === 'before' 
@@ -26,7 +26,7 @@
     >
       <!-- 容器起始標籤頂條 (Opening Bar) - 可直接按住拖曳整個容器及其內容 -->
       <div 
-        class="px-3 py-2 bg-indigo-50/80 dark:bg-gradient-to-r dark:from-indigo-950/80 dark:via-slate-900 dark:to-slate-900/90 border-b border-indigo-200 dark:border-indigo-900/40 flex items-center justify-between gap-2 puzzle-notch-top select-none cursor-grab active:cursor-grabbing hover:bg-indigo-100/70 dark:hover:bg-indigo-950/90 transition-colors"
+        class="px-3 py-2 bg-indigo-50/80 dark:bg-linear-to-r dark:from-indigo-950/80 dark:via-slate-900 dark:to-slate-900/90 border-b border-indigo-200 dark:border-indigo-900/40 flex items-center justify-between gap-2 puzzle-notch-top select-none cursor-grab active:cursor-grabbing hover:bg-indigo-100/70 dark:hover:bg-indigo-950/90 transition-colors"
         draggable="true"
         @dragstart="onNodeDragStart"
         @dragend="onNodeDragEnd"
@@ -831,7 +831,7 @@
 
     <!-- 底部插入導引區 (Drop After) -->
     <div 
-      v-if="draggingBlock && !isSelfBeingDragged"
+      v-if="draggingBlock && !isSelfBeingDragged && draggingBlock.type !== 'attr'"
       class="transition-all duration-150 relative z-30"
       :class="[
         dropPos === 'after' 
@@ -1129,6 +1129,21 @@ function onOpeningBarDragLeave(e) {
 
 function onOpeningBarDrop(e) {
   if (isSelfBeingDragged.value) return;
+  try {
+    const raw = e.dataTransfer.getData('text/plain');
+    if (raw) {
+      const block = JSON.parse(raw);
+      if (block.type === 'attr') {
+        emit('add-attr', {
+          nodeId: props.node.id,
+          key: block.key,
+          value: block.value
+        });
+        clearDraggingBlock();
+        return;
+      }
+    }
+  } catch (err) {}
   if (openingBarDropPos.value === 'inside-start') {
     onDropInsideContainer('start', e);
   } else if (dropPos.value === 'before') {
@@ -1204,6 +1219,14 @@ function onDropRelative(position, e) {
       const block = JSON.parse(raw);
       // 防呆：禁止將自身插入至自身前後
       if (block.isExistingNode && block.nodeId === props.node.id) return;
+      if (block.type === 'attr') {
+        emit('add-attr', {
+          nodeId: props.node.id,
+          key: block.key,
+          value: block.value
+        });
+        return;
+      }
       emit('drop-relative', {
         targetNodeId: props.node.id,
         position,

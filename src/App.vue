@@ -88,6 +88,31 @@
       @close="showReviewModal = false"
       @open-handbook="onOpenHandbookFromReview"
     />
+
+    <!-- 5. 警示與提示 Toast 浮動視窗 -->
+    <transition
+      enter-active-class="transition duration-200 ease-out transform"
+      enter-from-class="-translate-y-4 opacity-0 scale-95"
+      enter-to-class="translate-y-0 opacity-100 scale-100"
+      leave-active-class="transition duration-150 ease-in transform"
+      leave-from-class="translate-y-0 opacity-100 scale-100"
+      leave-to-class="-translate-y-4 opacity-0 scale-95"
+    >
+      <div 
+        v-if="toastMessage" 
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-amber-500 dark:bg-amber-600 text-white shadow-2xl border border-amber-300 dark:border-amber-400 font-bold text-sm pointer-events-auto tracking-wide"
+      >
+        <span class="text-lg">⚠️</span>
+        <span>{{ toastMessage }}</span>
+        <button 
+          @click="toastMessage = ''" 
+          class="ml-2 text-white/80 hover:text-white cursor-pointer text-xs p-1"
+          title="關閉提示"
+        >
+          ✕
+        </button>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -149,7 +174,20 @@ const currentBlockCount = computed(() => {
 });
 
 const { evaluateChecklist, runInteractiveTest } = useLevelValidator();
-const { isMuted, toggleMute, playSnap, playCheck, playSuccess, playClick } = useAudioFeedback();
+const { isMuted, toggleMute, playSnap, playCheck, playSuccess, playClick, playWarning } = useAudioFeedback();
+
+// 提示訊息 (Toast)
+const toastMessage = ref('');
+let toastTimer = null;
+
+function showToast(msg) {
+  playWarning();
+  toastMessage.value = msg;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastMessage.value = '';
+  }, 3200);
+}
 
 // 模態框顯示開關
 const showMapModal = ref(false);
@@ -211,12 +249,22 @@ function onAddBlockToRoot(blockTemplate) {
   }
   // 屬性晶片特殊處理 (如第五關)
   if (blockTemplate.type === 'attr') {
-    const targetNode = canvasNodes.value[0];
-    if (targetNode) {
-      attachAttribute(targetNode.id, blockTemplate.key, blockTemplate.value);
+    // 尋找畫布上可掛載屬性的標籤節點
+    const targetNode = canvasNodes.value.find(n => n.type === 'container' || n.type === 'void_tag');
+    if (!targetNode) {
+      // 依使用者指示：未加入按鈕標籤直接點選屬性時報錯
+      showToast('目前組裝區沒有可以加入屬性的標籤');
       return;
     }
+    attachAttribute(targetNode.id, blockTemplate.key, blockTemplate.value);
+    return;
   }
+
+  // 第五關防呆：若畫布上已存在目標按鈕，點擊 palette 中的按鈕不重複新增第二顆按鈕
+  if (currentLevel.value.id === 'stage-5' && blockTemplate.tag === 'button' && canvasNodes.value.some(n => n.tag === 'button')) {
+    return;
+  }
+
   const node = createNewNode(blockTemplate);
   addNode(node);
 }
@@ -224,6 +272,15 @@ function onAddBlockToRoot(blockTemplate) {
 // 相對指定節點之前或之後放置
 function onDropRelative({ targetNodeId, position, block }) {
   playSnap();
+  // 屬性晶片特殊處理：拖曳釋放至節點周邊時，直接掛載至該節點，絕不作為兄弟節點插入
+  if (block.type === 'attr') {
+    attachAttribute(targetNodeId, block.key, block.value);
+    return;
+  }
+  // 第五關防呆：避免重複新增按鈕
+  if (currentLevel.value.id === 'stage-5' && block.tag === 'button' && canvasNodes.value.some(n => n.tag === 'button') && !block.isExistingNode) {
+    return;
+  }
   if (block.isExistingNode) {
     moveNodeRelative(block.nodeId, targetNodeId, position);
   } else {
@@ -237,6 +294,10 @@ function onDropInside({ targetContainerId, position = 'end', block }) {
   playSnap();
   if (block.type === 'attr') {
     attachAttribute(targetContainerId, block.key, block.value);
+    return;
+  }
+  // 第五關防呆：避免重複新增按鈕
+  if (currentLevel.value.id === 'stage-5' && block.tag === 'button' && canvasNodes.value.some(n => n.tag === 'button') && !block.isExistingNode) {
     return;
   }
   if (block.isExistingNode) {

@@ -71,18 +71,19 @@
         <!-- 拖曳中的半透明預覽積木 (Ghost Preview) -->
         <div 
           v-if="isDragOver && draggingBlock" 
-          class="w-full max-w-md p-4 rounded-xl border-2 border-dashed border-indigo-500 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 opacity-70 flex items-center justify-between shadow-lg pointer-events-none transition-all animate-pulse"
+          class="w-full max-w-md p-4 rounded-xl border-2 border-dashed flex items-center justify-between shadow-lg pointer-events-none transition-all animate-pulse"
+          :class="draggingBlock.type === 'attr' ? 'border-amber-500 bg-amber-500/20 text-amber-700 dark:text-amber-300' : 'border-indigo-500 bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 opacity-70'"
         >
           <div class="flex items-center space-x-2">
-            <span class="font-mono text-sm font-extrabold px-2.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/60 border border-indigo-300 dark:border-indigo-700">
+            <span class="font-mono text-sm font-extrabold px-2.5 py-0.5 rounded border" :class="draggingBlock.type === 'attr' ? 'bg-amber-100 dark:bg-amber-900/60 border-amber-300 dark:border-amber-700' : 'bg-indigo-100 dark:bg-indigo-900/60 border-indigo-300 dark:border-indigo-700'">
               {{ draggingBlock.label || ('<' + draggingBlock.tag + '>') }}
             </span>
             <span class="text-xs font-bold font-sans">
-              ✨ 放開滑鼠即可固定為實體積木
+              {{ draggingBlock.type === 'attr' ? '⚠️ 目前組裝區沒有可以加入屬性的標籤' : '✨ 放開滑鼠即可固定為實體積木' }}
             </span>
           </div>
-          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-200/50 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200">
-            半透明預覽
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded" :class="draggingBlock.type === 'attr' ? 'bg-amber-200/50 dark:bg-amber-950 text-amber-800 dark:text-amber-200' : 'bg-indigo-200/50 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-200'">
+            {{ draggingBlock.type === 'attr' ? '無法單獨放置' : '半透明預覽' }}
           </span>
         </div>
 

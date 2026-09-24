@@ -167,12 +167,13 @@ export function validateLevelSequenceAndStructure(level, canvasNodes = [], htmlC
     }
 
     case 'stage-5': {
-      if (nodes.length !== 1 || nodes[0].tag !== 'button') {
+      const validNodes = nodes.filter(n => n.type === 'container' || n.type === 'void_tag');
+      if (validNodes.length !== 1 || validNodes[0].tag !== 'button') {
         result.valid = false;
         result.errors.push('元件結構有誤：畫布上應僅保留目標按鈕，並將屬性晶片直接掛載於該按鈕！');
         return result;
       }
-      const attrs = nodes[0].attrs || {};
+      const attrs = validNodes[0].attrs || {};
       const missingAttrs = [];
       if (attrs.id !== 'like-btn') missingAttrs.push('身分識別');
       if (attrs.class !== 'btn-primary') missingAttrs.push('樣式類別');
@@ -441,13 +442,13 @@ export function useLevelValidator() {
       }
 
       case 'stage-5': {
-        const isCleanRoot = nodes.length === 1 && nodes[0]?.tag === 'button';
-        const btnNode = isCleanRoot ? nodes[0] : nodes.find(n => n.tag === 'button');
+        const validNodes = nodes.filter(n => n.type === 'container' || n.type === 'void_tag');
+        const btnNode = validNodes.find(n => n.tag === 'button') || nodes.find(n => n.tag === 'button');
         const attrs = btnNode?.attrs || {};
         results['chk_id'] = attrs.id === 'like-btn';
         results['chk_class'] = attrs.class === 'btn-primary';
         results['chk_style'] = typeof attrs.style === 'string' && attrs.style.includes('color');
-        results['chk_onclick'] = typeof attrs.onclick === 'string' && attrs.onclick.includes('alert(') && isCleanRoot;
+        results['chk_onclick'] = typeof attrs.onclick === 'string' && attrs.onclick.includes('alert(');
         break;
       }
 
